@@ -116,7 +116,7 @@ Double-click `index.html` to open directly in any browser (Chrome, Edge, Firefox
 | Category | Count | Sample Canonical Destinations |
 | :--- | :---: | :--- |
 | **Academic Blocks** | 12 | C-Block (CSED), D-Block (ECED/EIED), B-Block (MED), E-Block, F-Block, G-Block, Tan Complex, Lecture Hall Complex (LP/LT), Mechanical Workshops, Venture Lab / STEP, TSLAS, Polytechnic College. |
-| **Hostels** | 15 | Agira Hall (Hostel A), Amritam Hall (Hostel B), Prithvi Hall (Hostel C), Vahni Hall (Hostel Q), Hostel E, G Hostel (girls' hostel), Vyan Hall (Hostel H), Ira Hall (Hostel I), Tejas Hall (Hostel J), Ambaram Hall (Hostel K), Anantam Hall (Hostel M Towers), Ananta Hall (Iconic Hostel N), Vyom Hall (Hostel O), PG Hostel, Vasudha Hall. |
+| **Hostels** | 15 | Agira Hall (Hostel A), Amritam Hall (Hostel B), Prithvi Hall (Hostel C), Vahni Hall (Hostel Q, girls' hostel), Hostel E, G Hostel (girls' hostel), Vyan Hall (Hostel H), Ira Hall (Hostel I), Tejas Hall (Hostel J), Ambaram Hall (Hostel K), Anantam Hall (Hostel M Towers), Ananta Hall (Iconic Hostel N), Vyom Hall (Hostel O), PG Hostel, Vasudha Hall. |
 | **Libraries** | 1 | Nava Nalanda Central Library (4-storey central academic library & reading halls). |
 | **Food Courts and Cafes** | 6 | COS Complex Central Food Court (Jaggi, Wrapchik, Dessert Club, Chai Nagri, Honey, Bombay Munchery), Streat Cafe & Bakery, Waterbody Cafe, G-Block Canteen, TSLAS Canteen, Ahaar Food Point. |
 | **Sports Facilities** | 6 | Athletic Stadium & 400m Synthetic Running Track, Olympic Swimming Pool Complex, Cricket Pavilion & Turf Ground, Floodlit Tennis Courts, Volleyball & Basketball Arena, Open Air Theatre (OAT). |

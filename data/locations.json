@@ -737,7 +737,7 @@
     "id": "hostel-d-vahni",
     "name": "Vahni Hall (Hostel Q)",
     "category": "Hostels",
-    "subcategory": "Boys' Hostels",
+    "subcategory": "Girls' Hostels",
     "aliases": [
       "Vahni Hall",
       "Vahni",
@@ -1156,13 +1156,12 @@
   },
   {
     "id": "pg-hostel",
-    "name": "Post Graduate (PG) Hostel",
+    "name": "PG Hostel",
     "category": "Hostels",
     "subcategory": "Girls' Hostels",
     "aliases": [
       "PG Hostel",
       "PG-Hostel",
-      "Postgraduate Hostel",
       "MTech Hostel",
       "PhD Hostel"
     ],
