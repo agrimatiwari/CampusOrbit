@@ -1,144 +1,90 @@
 /**
- * CampusRoutes – Smart Campus Navigation Platform
- * Thapar Institute of Engineering & Technology (TIET), Patiala
- * "Your Campus, Within Reach"
- * 
- * Storage Module – LocalStorage Helper
- * Pure Vanilla JavaScript; manages user favourites, recent searches, and UI preferences.
+ * js/storage.js
+ * Safe client-side persistence for recent searches, saved places, and theme preference.
  */
 
-(function(window) {
-  'use strict';
+(function (global) {
+    'use strict';
 
-  const FAVOURITES_KEY = 'campusroutes_favourites';
-  const RECENTS_KEY = 'campusroutes_recents';
-  const PREFS_KEY = 'campusroutes_prefs';
+    const KEYS = {
+        RECENT: 'campusroutes_recent_v2',
+        FAVORITES: 'campusroutes_favorites_v2',
+        THEME: 'campusroutes_theme_v2'
+    };
 
-  // Legacy fallback keys
-  const LEGACY_KEYS = {
-    favourites: ['campusorbit_favourites', 'campusconnect_favourites'],
-    recents: ['campusorbit_recents', 'campusconnect_recents']
-  };
-
-  const safeStorage = {
-    get: function(key, defaultValue, fallbackKeys = []) {
-      try {
-        let item = localStorage.getItem(key);
-        if (!item && fallbackKeys.length > 0) {
-          for (const fallback of fallbackKeys) {
-            item = localStorage.getItem(fallback);
-            if (item) break;
-          }
+    function readJson(key, fallback) {
+        try {
+            const raw = global.localStorage.getItem(key);
+            if (!raw) return fallback;
+            const parsed = JSON.parse(raw);
+            return Array.isArray(fallback) && !Array.isArray(parsed) ? fallback : parsed;
+        } catch (_err) {
+            return fallback;
         }
-        return item ? JSON.parse(item) : defaultValue;
-      } catch (e) {
-        console.warn('[CampusRoutes] LocalStorage read error:', e);
-        return defaultValue;
-      }
-    },
-    set: function(key, value) {
-      try {
-        localStorage.setItem(key, JSON.stringify(value));
-      } catch (e) {
-        console.warn('[CampusRoutes] LocalStorage write error:', e);
-      }
     }
-  };
 
-  window.CampusStorage = {
-    /**
-     * Get list of favourite location IDs
-     * @returns {string[]}
-     */
-    getFavourites: function() {
-      return safeStorage.get(
-        FAVOURITES_KEY, 
-        ['nava-nalanda-library', 'cos-complex', 'lt-building'], 
-        LEGACY_KEYS.favourites
-      );
-    },
-
-    /**
-     * Check if a location is favourited
-     * @param {string} id
-     * @returns {boolean}
-     */
-    isFavourite: function(id) {
-      const favs = this.getFavourites();
-      return favs.includes(id);
-    },
-
-    /**
-     * Toggle favourite status for a location ID
-     * @param {string} id
-     * @returns {boolean} New favourite status
-     */
-    toggleFavourite: function(id) {
-      let favs = this.getFavourites();
-      let isFav = false;
-      if (favs.includes(id)) {
-        favs = favs.filter(favId => favId !== id);
-        isFav = false;
-      } else {
-        favs.push(id);
-        isFav = true;
-      }
-      safeStorage.set(FAVOURITES_KEY, favs);
-      return isFav;
-    },
-
-    /**
-     * Get recent location IDs
-     * @returns {string[]}
-     */
-    getRecents: function() {
-      return safeStorage.get(
-        RECENTS_KEY, 
-        ['nava-nalanda-library', 'lt-building', 'cos-complex', 'auditorium'], 
-        LEGACY_KEYS.recents
-      );
-    },
-
-    /**
-     * Add a location ID to recent history (max 8)
-     * @param {string} id
-     */
-    addRecent: function(id) {
-      if (!id) return;
-      let recents = this.getRecents();
-      recents = recents.filter(item => item !== id);
-      recents.unshift(id);
-      if (recents.length > 8) {
-        recents = recents.slice(0, 8);
-      }
-      safeStorage.set(RECENTS_KEY, recents);
-    },
-
-    /**
-     * Clear recent history
-     */
-    clearRecents: function() {
-      safeStorage.set(RECENTS_KEY, []);
-    },
-
-    /**
-     * Get user preferences
-     * @returns {Object}
-     */
-    getPrefs: function() {
-      return safeStorage.get(PREFS_KEY, {
-        activeLayer: 'osm',
-        showFootprints: true
-      });
-    },
-
-    /**
-     * Save user preferences
-     * @param {Object} prefs
-     */
-    savePrefs: function(prefs) {
-      const current = this.getPrefs();
-      safeStorage.set(PREFS_KEY, { ...current, ...prefs });
+    function writeJson(key, value) {
+        try {
+            global.localStorage.setItem(key, JSON.stringify(value));
+            return true;
+        } catch (_err) {
+            return false;
+        }
     }
-  };
-})(window);
+
+    const CampusStorage = {
+        getRecentIds() {
+            return readJson(KEYS.RECENT, []).filter((id) => typeof id === 'string');
+        },
+
+        addRecentId(locationId) {
+            if (!locationId) return;
+            const current = this.getRecentIds().filter((id) => id !== locationId);
+            current.unshift(locationId);
+            writeJson(KEYS.RECENT, current.slice(0, 6));
+        },
+
+        getFavoriteIds() {
+            return readJson(KEYS.FAVORITES, []).filter((id) => typeof id === 'string');
+        },
+
+        toggleFavoriteId(locationId) {
+            if (!locationId) return false;
+            const favs = new Set(this.getFavoriteIds());
+            let added = false;
+            if (favs.has(locationId)) {
+                favs.delete(locationId);
+            } else {
+                favs.add(locationId);
+                added = true;
+            }
+            writeJson(KEYS.FAVORITES, Array.from(favs));
+            return added;
+        },
+
+        isFavorite(locationId) {
+            return this.getFavoriteIds().includes(locationId);
+        },
+
+        getTheme() {
+            try {
+                return global.localStorage.getItem(KEYS.THEME) || 'light';
+            } catch (_err) {
+                return 'light';
+            }
+        },
+
+        setTheme(theme) {
+            try {
+                global.localStorage.setItem(KEYS.THEME, theme === 'dark' ? 'dark' : 'light');
+            } catch (_err) {
+                // Ignore storage quota errors
+            }
+        }
+    };
+
+    global.CampusStorage = CampusStorage;
+    if (typeof module !== 'undefined' && module.exports) {
+        module.exports = CampusStorage;
+    }
+})(typeof window !== 'undefined' ? window : globalThis);

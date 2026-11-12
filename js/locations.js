@@ -1,2400 +1,640 @@
 /**
- * CampusRoutes – Smart Campus Navigation Platform
- * Thapar Institute of Engineering & Technology (TIET), Patiala
- * "Your Campus, Within Reach"
- * 
- * Master Canonical Location Database
- * 
- * STRICT ARCHITECTURAL RULE:
- * Single source of truth. Every physical place has exactly ONE canonical record.
- * Sublocations, departments, and alternative names are stored in aliases
- * and sublocations, preventing duplicate markers and search results.
+ * js/locations.js
+ * Canonical, validated dataset of Thapar Institute of Engineering & Technology (TIET) Patiala landmarks.
+ * Single source of truth used by Search, Map Markers, and Pedestrian Routing.
  */
 
-(function(window) {
-  'use strict';
+(function (global) {
+    'use strict';
 
-  // Master Canonical Dataset (52 verified TIET locations in 7 categories)
-  const EMBEDDED_LOCATIONS = [
-  {
-    "id": "nava-nalanda-library",
-    "name": "Nava Nalanda Central Library",
-    "category": "Libraries",
-    "subcategory": "Central Library",
-    "aliases": [
-      "Central Library",
-      "Nava Nalanda",
-      "Library",
-      "NNL",
-      "Main Library",
-      "Reading Hall"
-    ],
-    "description": "The four-storey iconic central academic library of TIET, housing over 250,000 books, extensive digital learning archives, quiet study spaces, and research pods.",
-    "coordinates": [
-      30.354324,
-      76.369762
-    ],
-    "block": "Central Academic Zone",
-    "facilities": [
-      "Wi-Fi",
-      "Digital Archives",
-      "Quiet Study Rooms",
-      "Air Conditioned",
-      "Photocopy Service",
-      "Discussion Rooms"
-    ],
-    "sublocations": [
-      {
-        "name": "Ground Floor Lending & Reference Section",
-        "code": "LIB-GF"
-      },
-      {
-        "name": "First Floor Reading Hall & Journal Archives",
-        "code": "LIB-1F"
-      },
-      {
-        "name": "Second Floor Digital Resource Centre",
-        "code": "LIB-2F"
-      },
-      {
-        "name": "Third Floor Research Scholar Cubicles",
-        "code": "LIB-3F"
-      }
-    ],
-    "nearby": [
-      "lt-building",
-      "c-block",
-      "d-block",
-      "waterbody-cafe"
-    ],
-    "quickNav": true,
-    "openingHours": "08:00 AM - 12:00 Midnight (24/7 during exams)"
-  },
-  {
-    "id": "lt-building",
-    "name": "Lecture Hall Complex (LT & LP Blocks)",
-    "category": "Academic Blocks",
-    "subcategory": "Lecture Halls",
-    "aliases": [
-      "LT Building",
-      "Lecture Theatres",
-      "LP Building",
-      "Lecture Hall Complex",
-      "LT Area",
-      "LP",
-      "LT",
-      "Classrooms"
-    ],
-    "description": "Primary tiered lecture theatre hub of Thapar University, featuring modern tiered multimedia lecture halls (LP-101 to LP-112, LT-1 to LT-4) for core engineering coursework.",
-    "coordinates": [
-      30.355012,
-      76.36928
-    ],
-    "block": "North Academic Quad",
-    "facilities": [
-      "Smart Projectors",
-      "Acoustic Walls",
-      "Air Conditioning",
-      "PA System",
-      "Elevators",
-      "Accessible Ramps"
-    ],
-    "sublocations": [
-      {
-        "name": "LP-108 Lecture Hall",
-        "code": "LP-108"
-      },
-      {
-        "name": "LP-109 Lecture Hall",
-        "code": "LP-109"
-      },
-      {
-        "name": "LP-101 to LP-106 Classrooms",
-        "code": "LP-101-106"
-      },
-      {
-        "name": "Main Lecture Theatres LT-1 to LT-4",
-        "code": "LT-1-4"
-      }
-    ],
-    "nearby": [
-      "nava-nalanda-library",
-      "waterbody-cafe",
-      "dean-office",
-      "tan-complex"
-    ],
-    "quickNav": true,
-    "openingHours": "08:00 AM - 06:00 PM"
-  },
-  {
-    "id": "c-block",
-    "name": "C-Block (Computer Science & Engineering)",
-    "category": "Academic Blocks",
-    "subcategory": "Academic Blocks",
-    "aliases": [
-      "C Block",
-      "C-Block",
-      "Computer Science Department",
-      "CSED",
-      "CS Dept",
-      "Software Engineering Lab"
-    ],
-    "description": "Houses the Department of Computer Science & Engineering (CSED), advanced high-performance computing labs, AI/ML research facilities, and faculty chambers.",
-    "coordinates": [
-      30.353516,
-      76.371217
-    ],
-    "block": "East Academic Wing",
-    "facilities": [
-      "Computing Labs",
-      "Faculty Cabins",
-      "Seminar Hall",
-      "Restrooms",
-      "Water Coolers",
-      "High-Speed LAN"
-    ],
-    "sublocations": [
-      {
-        "name": "Department of Computer Science & Engineering (CSED)",
-        "code": "CSED"
-      },
-      {
-        "name": "Advanced Computing & AI Lab",
-        "code": "C-204"
-      },
-      {
-        "name": "Software Systems Laboratory",
-        "code": "C-102"
-      }
-    ],
-    "nearby": [
-      "d-block",
-      "b-block",
-      "e-block",
-      "nava-nalanda-library"
-    ],
-    "quickNav": true,
-    "openingHours": "08:30 AM - 05:30 PM"
-  },
-  {
-    "id": "d-block",
-    "name": "D-Block (Electrical & Instrumentation / Electronics)",
-    "category": "Academic Blocks",
-    "subcategory": "Academic Blocks",
-    "aliases": [
-      "D Block",
-      "D-Block",
-      "ECED",
-      "EIED",
-      "Electronics Department",
-      "Electrical Department"
-    ],
-    "description": "Houses the Department of Electrical & Instrumentation Engineering (EIED) and Electronics & Communication Engineering (ECED), equipped with embedded systems and VLSI design labs.",
-    "coordinates": [
-      30.353929,
-      76.370516
-    ],
-    "block": "East Academic Wing",
-    "facilities": [
-      "Microprocessor Labs",
-      "Control Systems Lab",
-      "Department Library",
-      "Faculty Offices"
-    ],
-    "sublocations": [
-      {
-        "name": "Electrical & Instrumentation Dept (EIED)",
-        "code": "EIED"
-      },
-      {
-        "name": "Electronics & Communication Dept (ECED)",
-        "code": "ECED"
-      },
-      {
-        "name": "Embedded Systems & IoT Lab",
-        "code": "D-302"
-      }
-    ],
-    "nearby": [
-      "c-block",
-      "nava-nalanda-library",
-      "lt-building",
-      "mechanical-workshop"
-    ],
-    "quickNav": false,
-    "openingHours": "08:30 AM - 05:30 PM"
-  },
-  {
-    "id": "b-block",
-    "name": "B-Block (Mechanical Engineering & Design)",
-    "category": "Academic Blocks",
-    "subcategory": "Academic Blocks",
-    "aliases": [
-      "B Block",
-      "B-Block",
-      "Mechanical Engineering Department",
-      "MED",
-      "Mech Dept",
-      "Drawing Hall"
-    ],
-    "description": "Department of Mechanical Engineering (MED) academic building, housing design studios, CAD/CAM computer labs, thermodynamics labs, and faculty offices.",
-    "coordinates": [
-      30.353083,
-      76.371297
-    ],
-    "block": "Southeast Academic Block",
-    "facilities": [
-      "CAD/CAM Lab",
-      "Engineering Graphics Studio",
-      "Departmental Library",
-      "Research Labs"
-    ],
-    "sublocations": [
-      {
-        "name": "Mechanical Engineering Department (MED)",
-        "code": "MED"
-      },
-      {
-        "name": "Central Drawing Hall",
-        "code": "B-101"
-      },
-      {
-        "name": "Robotics & Automation Lab",
-        "code": "B-205"
-      }
-    ],
-    "nearby": [
-      "c-block",
-      "directorate",
-      "auditorium",
-      "streat-cafe"
-    ],
-    "quickNav": false,
-    "openingHours": "08:30 AM - 05:30 PM"
-  },
-  {
-    "id": "e-block",
-    "name": "E-Block (Biotechnology & Chemical Sciences)",
-    "category": "Academic Blocks",
-    "subcategory": "Academic Blocks",
-    "aliases": [
-      "E Block",
-      "E-Block",
-      "Biotechnology Dept",
-      "Chemical Engineering",
-      "Bio Dept",
-      "Chem Dept"
-    ],
-    "description": "Academic building for Department of Biotechnology and Department of Chemical Engineering, with specialized bio-process, genetic engineering, and chemical instrumentation labs.",
-    "coordinates": [
-      30.353436,
-      76.372316
-    ],
-    "block": "Far East Academic Quad",
-    "facilities": [
-      "Bio-Process Lab",
-      "Fume Hood Chemistry Labs",
-      "Cold Storage",
-      "Analytical Instrumentation"
-    ],
-    "sublocations": [
-      {
-        "name": "Department of Biotechnology",
-        "code": "DBT"
-      },
-      {
-        "name": "Department of Chemical Engineering",
-        "code": "CHE"
-      },
-      {
-        "name": "Plant Tissue Culture Lab",
-        "code": "E-108"
-      }
-    ],
-    "nearby": [
-      "f-block",
-      "c-block",
-      "directorate",
-      "main-gate"
-    ],
-    "quickNav": false,
-    "openingHours": "08:30 AM - 05:30 PM"
-  },
-  {
-    "id": "f-block",
-    "name": "F-Block (Civil Engineering & Physics)",
-    "category": "Academic Blocks",
-    "subcategory": "Academic Blocks",
-    "aliases": [
-      "F Block",
-      "F-Block",
-      "Civil Engineering Department",
-      "CED",
-      "School of Physics",
-      "SPMS"
-    ],
-    "description": "Houses the Civil Engineering Department (CED) and School of Physics and Materials Science (SPMS), featuring geotechnical, hydraulics, materials testing, and optics laboratories.",
-    "coordinates": [
-      30.353959,
-      76.37218
-    ],
-    "block": "Far East Academic Quad",
-    "facilities": [
-      "Structural Engineering Lab",
-      "Optics Lab",
-      "Geotech Soil Lab",
-      "Surveying Store"
-    ],
-    "sublocations": [
-      {
-        "name": "Civil Engineering Department (CED)",
-        "code": "CED"
-      },
-      {
-        "name": "School of Physics & Materials Science (SPMS)",
-        "code": "SPMS"
-      },
-      {
-        "name": "Concrete Testing Yard",
-        "code": "F-Yard"
-      }
-    ],
-    "nearby": [
-      "e-block",
-      "c-block",
-      "mechanical-workshop"
-    ],
-    "quickNav": false,
-    "openingHours": "08:30 AM - 05:30 PM"
-  },
-  {
-    "id": "g-block",
-    "name": "G-Block (School of Mathematics & Humanities)",
-    "category": "Academic Blocks",
-    "subcategory": "Academic Blocks",
-    "aliases": [
-      "G Block",
-      "G-Block",
-      "School of Mathematics",
-      "SOM",
-      "Humanities Dept"
-    ],
-    "description": "Academic block accommodating the School of Mathematics, Department of Humanities and Social Sciences, faculty seminar rooms, and tutorial classrooms.",
-    "coordinates": [
-      30.353282,
-      76.3694
-    ],
-    "block": "Central Academic Quad",
-    "facilities": [
-      "Tutorial Classrooms",
-      "Faculty Offices",
-      "Language Lab",
-      "Department Library"
-    ],
-    "sublocations": [
-      {
-        "name": "School of Mathematics (SOM)",
-        "code": "SOM"
-      },
-      {
-        "name": "Language & Communication Lab",
-        "code": "G-104"
-      }
-    ],
-    "nearby": [
-      "tan-complex",
-      "g-block-canteen",
-      "nava-nalanda-library",
-      "sbop-lawns"
-    ],
-    "quickNav": false,
-    "openingHours": "08:30 AM - 05:30 PM"
-  },
-  {
-    "id": "tan-complex",
-    "name": "Tan Complex (Contemporary Academic Block)",
-    "category": "Academic Blocks",
-    "subcategory": "Academic Blocks",
-    "aliases": [
-      "Tan Block",
-      "Tan Complex",
-      "TAN",
-      "Tan Academic Block",
-      "New Academic Complex"
-    ],
-    "description": "A landmark contemporary architectural academic building designed with large glass facade atriums, smart lecture halls, project discussion arenas, and collaborative study nodes.",
-    "coordinates": [
-      30.353634,
-      76.368541
-    ],
-    "block": "West Academic Hub",
-    "facilities": [
-      "Air Conditioning",
-      "Atrium Seating",
-      "Smart Boards",
-      "Elevators",
-      "Accessible Restrooms"
-    ],
-    "sublocations": [
-      {
-        "name": "Tan Central Atrium",
-        "code": "TAN-ATRIUM"
-      },
-      {
-        "name": "Collaborative Design Studios",
-        "code": "TAN-301-306"
-      }
-    ],
-    "nearby": [
-      "g-block",
-      "lt-building",
-      "nava-nalanda-library",
-      "cos-complex"
-    ],
-    "quickNav": true,
-    "openingHours": "08:00 AM - 08:00 PM"
-  },
-  {
-    "id": "mechanical-workshop",
-    "name": "Mechanical Workshop & Fabrication Centre",
-    "category": "Academic Blocks",
-    "subcategory": "Laboratories",
-    "aliases": [
-      "Central Workshop",
-      "Workshop",
-      "Mech Workshop",
-      "Fabrication Lab",
-      "Fitting Shop",
-      "Welding Shop",
-      "Foundry"
-    ],
-    "description": "Extensive industrial hands-on training complex containing machining shops, foundry, smithy, welding, carpentry, CNC manufacturing units, and student vehicle project bays.",
-    "coordinates": [
-      30.354537,
-      76.371303
-    ],
-    "block": "Northeast Technical Yard",
-    "facilities": [
-      "Lathe & Milling Machines",
-      "CNC Centre",
-      "Welding Bays",
-      "Safety Equipment Store",
-      "Student Racing Team Garages (Team Fateh)"
-    ],
-    "sublocations": [
-      {
-        "name": "Machine Shop & CNC Lathes",
-        "code": "WS-MACH"
-      },
-      {
-        "name": "Welding & Fabrication Bay",
-        "code": "WS-WELD"
-      },
-      {
-        "name": "Formula Student Bay (Team Fateh / Saur Urja)",
-        "code": "WS-RACE"
-      }
-    ],
-    "nearby": [
-      "d-block",
-      "f-block",
-      "venture-lab"
-    ],
-    "quickNav": false,
-    "openingHours": "08:30 AM - 05:00 PM"
-  },
-  {
-    "id": "venture-lab",
-    "name": "Venture Lab & STEP (TIFAC-CORE)",
-    "category": "Academic Blocks",
-    "subcategory": "Laboratories",
-    "aliases": [
-      "Venture Lab",
-      "STEP",
-      "Science & Technology Entrepreneur Park",
-      "TIFAC CORE",
-      "Incubation Centre",
-      "Thapar Startup Hub"
-    ],
-    "description": "University entrepreneurship and business incubation hub nurturing student startups, cutting-edge patent prototypes, and corporate sponsored R&D projects.",
-    "coordinates": [
-      30.355748,
-      76.372032
-    ],
-    "block": "Northeast Innovation Hub",
-    "facilities": [
-      "Co-working Space",
-      "High Speed Internet",
-      "Conference Room",
-      "Mentorship Desks",
-      "Prototyping Tools"
-    ],
-    "sublocations": [
-      {
-        "name": "Incubation Co-working Area",
-        "code": "STEP-INC"
-      },
-      {
-        "name": "TIFAC-CORE Research Labs",
-        "code": "TIFAC-CORE"
-      }
-    ],
-    "nearby": [
-      "mechanical-workshop",
-      "dean-office",
-      "tslas-building"
-    ],
-    "quickNav": false,
-    "openingHours": "09:00 AM - 07:00 PM"
-  },
-  {
-    "id": "tslas-building",
-    "name": "Thapar School of Liberal Arts and Sciences (TSLAS)",
-    "category": "Academic Blocks",
-    "subcategory": "Academic Blocks",
-    "aliases": [
-      "TSLAS",
-      "Liberal Arts School",
-      "Liberal Arts Building",
-      "TSLAS Block"
-    ],
-    "description": "State-of-the-art academic block housing multidisciplinary undergraduate and postgraduate programmes in humanities, economics, psychology, and behavioral sciences.",
-    "coordinates": [
-      30.356572,
-      76.371983
-    ],
-    "block": "North Campus Academic Sector",
-    "facilities": [
-      "Multimedia Theatres",
-      "Psychology Testing Lab",
-      "Faculty Lounge",
-      "Open Air Terrace"
-    ],
-    "sublocations": [
-      {
-        "name": "TSLAS Dean & Faculty Suites",
-        "code": "TSLAS-ADMIN"
-      },
-      {
-        "name": "TSLAS Seminar Theatre",
-        "code": "TSLAS-SEM"
-      }
-    ],
-    "nearby": [
-      "tslas-canteen",
-      "venture-lab",
-      "polytechnic-building"
-    ],
-    "quickNav": false,
-    "openingHours": "08:30 AM - 05:30 PM"
-  },
-  {
-    "id": "polytechnic-building",
-    "name": "Thapar Polytechnic College",
-    "category": "Academic Blocks",
-    "subcategory": "Academic Blocks",
-    "aliases": [
-      "Polytechnic Building",
-      "Thapar Polytechnic",
-      "Polytechnic College"
-    ],
-    "description": "Three-storey institution block delivering state diploma engineering programmes, with independent laboratories, administrative offices, and testing facilities.",
-    "coordinates": [
-      30.357585,
-      76.367557
-    ],
-    "block": "North Campus Sector",
-    "facilities": [
-      "Diploma Laboratories",
-      "Library",
-      "Drawing Halls",
-      "Administrative Office"
-    ],
-    "sublocations": [
-      {
-        "name": "Principal Office & Administration",
-        "code": "POLY-OFFICE"
-      }
-    ],
-    "nearby": [
-      "tslas-building",
-      "guest-house",
-      "dirghayu-ayurvedic-hospital"
-    ],
-    "quickNav": false,
-    "openingHours": "09:00 AM - 05:00 PM"
-  },
-  {
-    "id": "hostel-a-agira",
-    "name": "Agira Hall (Hostel A)",
-    "category": "Hostels",
-    "subcategory": "Boys' Hostels",
-    "aliases": [
-      "Hostel A",
-      "Hostel-A",
-      "Agira Hall",
-      "Agira",
-      "A Hostel",
-      "Block A Hostel"
-    ],
-    "description": "Major multi-storey male student residential hall equipped with well-ventilated double-seater rooms, modern student mess, indoor games room, and 24x7 Wi-Fi.",
-    "coordinates": [
-      30.351673,
-      76.364498
-    ],
-    "block": "South Residential Zone",
-    "facilities": [
-      "Mess / Dining Hall",
-      "Wi-Fi",
-      "Common Room",
-      "Table Tennis",
-      "Laundry Facility",
-      "Water Purifiers"
-    ],
-    "sublocations": [
-      {
-        "name": "Warden Office & Common Room",
-        "code": "AGIRA-OFFICE"
-      },
-      {
-        "name": "Agira Dining Hall",
-        "code": "AGIRA-MESS"
-      }
-    ],
-    "nearby": [
-      "hostel-b-amritam",
-      "hostel-h-vyan",
-      "pg-hostel",
-      "sports-ground"
-    ],
-    "quickNav": true,
-    "openingHours": "Residential Access (Curfew per TIET guidelines)"
-  },
-  {
-    "id": "hostel-b-amritam",
-    "name": "Amritam Hall (Hostel B)",
-    "category": "Hostels",
-    "subcategory": "Boys' Hostels",
-    "aliases": [
-      "Hostel B",
-      "Hostel-B",
-      "Amritam Hall",
-      "Amritam",
-      "B Hostel"
-    ],
-    "description": "Prominent boys' residence hall offering modern furnished rooms, hygienic catering services, reading room, gym equipment, and lush internal courtyards.",
-    "coordinates": [
-      30.351517,
-      76.363236
-    ],
-    "block": "South Residential Zone",
-    "facilities": [
-      "Mess / Dining Hall",
-      "Gymnasium",
-      "Indoor Games",
-      "Wi-Fi",
-      "Laundry Pick-up"
-    ],
-    "sublocations": [
-      {
-        "name": "Amritam Dining Hall",
-        "code": "AMRITAM-MESS"
-      }
-    ],
-    "nearby": [
-      "hostel-a-agira",
-      "hostel-c-prithvi",
-      "gurudwara",
-      "hostel-o-vyom"
-    ],
-    "quickNav": false,
-    "openingHours": "Residential Access"
-  },
-  {
-    "id": "hostel-c-prithvi",
-    "name": "Prithvi Hall (Hostel C)",
-    "category": "Hostels",
-    "subcategory": "Boys' Hostels",
-    "aliases": [
-      "Hostel C",
-      "Hostel-C",
-      "Prithvi Hall",
-      "Prithvi",
-      "C Hostel"
-    ],
-    "description": "Historic male undergraduate residence hall situated beside the south gardens, featuring spacious rooms, cooperative mess, and landscaped recreational lawns.",
-    "coordinates": [
-      30.351331,
-      76.361238
-    ],
-    "block": "Southwest Residential Sector",
-    "facilities": [
-      "Student Mess",
-      "Recreation Room",
-      "Wi-Fi",
-      "Bicycle Parking",
-      "Filtered Water Dispensers"
-    ],
-    "sublocations": [
-      {
-        "name": "Prithvi Dining Hall",
-        "code": "PRITHVI-MESS"
-      }
-    ],
-    "nearby": [
-      "hostel-b-amritam",
-      "hostel-o-vyom",
-      "central-fountain",
-      "hostel-m-anantam"
-    ],
-    "quickNav": false,
-    "openingHours": "Residential Access"
-  },
-  {
-    "id": "hostel-d-vahni",
-    "name": "Vahni Hall (Hostel Q)",
-    "category": "Hostels",
-    "subcategory": "Girls' Hostels",
-    "aliases": [
-      "Vahni Hall",
-      "Vahni",
-      "Hostel Q",
-      "Tower Residence"
-    ],
-    "description": "Multi-storey modern hostel tower complex offering contemporary student accommodations with high-speed elevator access, night cafeteria, and sports amenities.",
-    "coordinates": [
-      30.351898,
-      76.367521
-    ],
-    "block": "Southeast Residential Sector",
-    "facilities": [
-      "Elevators",
-      "Night Canteen",
-      "Wi-Fi",
-      "Reading Room",
-      "Power Backup"
-    ],
-    "sublocations": [
-      {
-        "name": "Vahni Dining Hall & Night Canteen",
-        "code": "VAHNI-MESS"
-      }
-    ],
-    "nearby": [
-      "pg-hostel",
-      "auditorium",
-      "streat-cafe",
-      "hostel-a-agira"
-    ],
-    "quickNav": false,
-    "openingHours": "Residential Access"
-  },
-  {
-    "id": "hostel-e",
-    "name": "Hostel E",
-    "category": "Hostels",
-    "subcategory": "Boys' Hostels",
-    "aliases": [
-      "Hostel E",
-      "Hostel-E",
-      "E Hostel"
-    ],
-    "description": "Three-storey peaceful boys' hostel surrounded by greenery, close to university sports facilities and tennis courts.",
-    "coordinates": [
-      30.355082,
-      76.366598
-    ],
-    "block": "Central North Residential Zone",
-    "facilities": [
-      "Dining Mess",
-      "Common Room",
-      "Wi-Fi",
-      "Table Tennis"
-    ],
-    "sublocations": [
-      {
-        "name": "Hostel E Dining Hall",
-        "code": "HOSTEL-E-MESS"
-      }
-    ],
-    "nearby": [
-      "hostel-i-ira",
-      "hostel-n-ananta",
-      "swimming-pool",
-      "tennis-courts"
-    ],
-    "quickNav": false,
-    "openingHours": "Residential Access"
-  },
-  {
-    "id": "hostel-g",
-    "name": "G Hostel",
-    "category": "Hostels",
-    "subcategory": "Girls' Hostels",
-    "aliases": [
-      "Hostel G",
-      "Hostel-G",
-      "G Hostel"
-    ],
-    "description": "Centrally situated three-storey hostel with spacious study rooms and direct proximity to the main campus swimming pool and athletic arenas.",
-    "coordinates": [
-      30.35433,
-      76.366719
-    ],
-    "block": "Central Sports & Residential Zone",
-    "facilities": [
-      "Dining Mess",
-      "Indoor Games",
-      "Wi-Fi",
-      "Reading Room"
-    ],
-    "sublocations": [
-      {
-        "name": "Hostel G Dining Hall",
-        "code": "HOSTEL-G-MESS"
-      }
-    ],
-    "nearby": [
-      "swimming-pool",
-      "hostel-e",
-      "hostel-n-ananta",
-      "cos-complex"
-    ],
-    "quickNav": false,
-    "openingHours": "Residential Access"
-  },
-  {
-    "id": "hostel-h-vyan",
-    "name": "Vyan Hall (Hostel H)",
-    "category": "Hostels",
-    "subcategory": "Boys' Hostels",
-    "aliases": [
-      "Hostel H",
-      "Hostel-H",
-      "Vyan Hall",
-      "Vyan",
-      "H Hostel"
-    ],
-    "description": "Accommodates senior undergraduate students, offering air-conditioned/non-air-conditioned room configurations, a dedicated dining mess, and recreation facility.",
-    "coordinates": [
-      30.352909,
-      76.364541
-    ],
-    "block": "South Central Zone",
-    "facilities": [
-      "Air Conditioned Rooms Available",
-      "Dining Mess",
-      "Wi-Fi",
-      "Common Room"
-    ],
-    "sublocations": [
-      {
-        "name": "Vyan Dining Hall",
-        "code": "VYAN-MESS"
-      }
-    ],
-    "nearby": [
-      "hostel-a-agira",
-      "hostel-j-tejas",
-      "oat-theatre",
-      "sports-ground"
-    ],
-    "quickNav": false,
-    "openingHours": "Residential Access"
-  },
-  {
-    "id": "hostel-i-ira",
-    "name": "Ira Hall (Hostel I - Girls' Hostel)",
-    "category": "Hostels",
-    "subcategory": "Girls' Hostels",
-    "aliases": [
-      "Hostel I",
-      "Hostel-I",
-      "Ira Hall",
-      "Ira",
-      "Girls Hostel I",
-      "I Hostel"
-    ],
-    "description": "Secure multi-storey female residence hall featuring dedicated warden supervision, modern dining mess, convenience store, gym, and landscaped interior courtyard.",
-    "coordinates": [
-      30.35507,
-      76.367646
-    ],
-    "block": "North Central Residential Zone",
-    "facilities": [
-      "24x7 Security & Biometric Entry",
-      "Hostel Mess",
-      "Gymnasium",
-      "Beauty Parlour",
-      "Wi-Fi",
-      "Sick Bay"
-    ],
-    "sublocations": [
-      {
-        "name": "Ira Dining Hall & Tuck Shop",
-        "code": "IRA-MESS"
-      }
-    ],
-    "nearby": [
-      "hostel-n-ananta",
-      "hostel-e",
-      "vasudha-hall",
-      "lt-building"
-    ],
-    "quickNav": false,
-    "openingHours": "Residential Access (Biometric Gate Rules Apply)"
-  },
-  {
-    "id": "hostel-j-tejas",
-    "name": "Tejas Hall (Hostel J)",
-    "category": "Hostels",
-    "subcategory": "Boys' Hostels",
-    "aliases": [
-      "Hostel J",
-      "Hostel-J",
-      "Tejas Hall",
-      "Tejas",
-      "J Hostel"
-    ],
-    "description": "Towering 7-storey male residential complex with modern elevators, premium double-seater accommodations, modern laundry infrastructure, and multi-cuisine mess.",
-    "coordinates": [
-      30.352834,
-      76.363431
-    ],
-    "block": "Southwest Sector",
-    "facilities": [
-      "High-Speed Elevators",
-      "Mess",
-      "Gym",
-      "Study Room",
-      "Wi-Fi",
-      "Table Tennis"
-    ],
-    "sublocations": [
-      {
-        "name": "Tejas Dining Hall",
-        "code": "TEJAS-MESS"
-      }
-    ],
-    "nearby": [
-      "hostel-h-vyan",
-      "hostel-b-amritam",
-      "oat-theatre",
-      "sports-ground"
-    ],
-    "quickNav": true,
-    "openingHours": "Residential Access"
-  },
-  {
-    "id": "hostel-k-ambaram",
-    "name": "Ambaram Hall (Hostel K)",
-    "category": "Hostels",
-    "subcategory": "Boys' Hostels",
-    "aliases": [
-      "Hostel K",
-      "Hostel-K",
-      "Ambaram Hall",
-      "Ambaram",
-      "K Hostel"
-    ],
-    "description": "Quiet modern residential hall situated in the northwest residential wing, close to the university cricket ground and athletic facilities.",
-    "coordinates": [
-      30.357182,
-      76.363754
-    ],
-    "block": "Northwest Residential Wing",
-    "facilities": [
-      "Dining Mess",
-      "Wi-Fi",
-      "TV Room",
-      "Bicycle Stands"
-    ],
-    "sublocations": [
-      {
-        "name": "Ambaram Dining Hall",
-        "code": "AMBARAM-MESS"
-      }
-    ],
-    "nearby": [
-      "cricket-ground",
-      "guest-house",
-      "sports-ground"
-    ],
-    "quickNav": false,
-    "openingHours": "Residential Access"
-  },
-  {
-    "id": "hostel-m-anantam",
-    "name": "Anantam Hall (Hostel M & High-Rise Towers)",
-    "category": "Hostels",
-    "subcategory": "Boys' Hostels",
-    "aliases": [
-      "Hostel M",
-      "Hostel-M",
-      "Anantam Hall",
-      "Anantam",
-      "M Hostel",
-      "Hostel Tower A",
-      "Hostel Tower B",
-      "Hostel Tower C",
-      "Hostel Tower D"
-    ],
-    "description": "Massive state-of-the-art 8-storey four-tower architectural residential complex designed by McCullough Mulvin, interconnected with covered high walkways around a central fountain.",
-    "coordinates": [
-      30.352591,
-      76.360675
-    ],
-    "block": "Southwest Residential Campus",
-    "facilities": [
-      "Elevators",
-      "Central Fountain Plaza",
-      "Modern Dining Hall",
-      "Gym",
-      "Wi-Fi",
-      "Inter-Tower Skybridges"
-    ],
-    "sublocations": [
-      {
-        "name": "Tower A Residential Wing",
-        "code": "M-TOWER-A"
-      },
-      {
-        "name": "Tower B Residential Wing",
-        "code": "M-TOWER-B"
-      },
-      {
-        "name": "Tower C Residential Wing",
-        "code": "M-TOWER-C"
-      },
-      {
-        "name": "Tower D Residential Wing",
-        "code": "M-TOWER-D"
-      },
-      {
-        "name": "Central Dining & Recreational Hub",
-        "code": "M-MESS"
-      }
-    ],
-    "nearby": [
-      "central-fountain",
-      "hostel-c-prithvi",
-      "back-gate",
-      "athletic-track"
-    ],
-    "quickNav": true,
-    "openingHours": "Residential Access"
-  },
-  {
-    "id": "hostel-n-ananta",
-    "name": "Ananta Hall (Iconic Hostel N - Girls' Hostel)",
-    "category": "Hostels",
-    "subcategory": "Girls' Hostels",
-    "aliases": [
-      "Hostel N",
-      "Hostel-N",
-      "Ananta Hall",
-      "Ananta",
-      "Iconic Hostel",
-      "Girls Hostel N",
-      "N Hostel"
-    ],
-    "description": "Prestigious architectural landmark high-rise residence for female students, famous for its red sandstone facade, shaded courtyards, modern dining complex, and high security.",
-    "coordinates": [
-      30.354472,
-      76.367637
-    ],
-    "block": "Central North Residential Zone",
-    "facilities": [
-      "Biometric Turnstiles",
-      "Air Conditioning",
-      "Elevators",
-      "Modern Mess",
-      "In-House Salon & Cafe",
-      "Study Lounges"
-    ],
-    "sublocations": [
-      {
-        "name": "Ananta Central Courtyard & Mess",
-        "code": "ANANTA-MESS"
-      },
-      {
-        "name": "Warden & Reception Desk",
-        "code": "ANANTA-OFFICE"
-      }
-    ],
-    "nearby": [
-      "hostel-i-ira",
-      "swimming-pool",
-      "lt-building",
-      "nava-nalanda-library"
-    ],
-    "quickNav": true,
-    "openingHours": "Residential Access (Biometric Entry)"
-  },
-  {
-    "id": "hostel-o-vyom",
-    "name": "Vyom Hall (Hostel O)",
-    "category": "Hostels",
-    "subcategory": "Boys' Hostels",
-    "aliases": [
-      "Hostel O",
-      "Hostel-O",
-      "Vyom Hall",
-      "Vyom",
-      "O Hostel"
-    ],
-    "description": "Eight-storey modern residential tower with single and shared occupancy rooms, elevator facilities, reading lounge, and multi-cuisine student dining hall.",
-    "coordinates": [
-      30.351416,
-      76.362353
-    ],
-    "block": "Southwest Sector",
-    "facilities": [
-      "High-Speed Elevators",
-      "Dining Hall",
-      "Wi-Fi",
-      "Lobby Lounge",
-      "Filtered Water Dispensers"
-    ],
-    "sublocations": [
-      {
-        "name": "Vyom Dining Mess",
-        "code": "VYOM-MESS"
-      }
-    ],
-    "nearby": [
-      "hostel-b-amritam",
-      "hostel-c-prithvi",
-      "hostel-j-tejas",
-      "central-fountain"
-    ],
-    "quickNav": false,
-    "openingHours": "Residential Access"
-  },
-  {
-    "id": "pg-hostel",
-    "name": "PG Hostel",
-    "category": "Hostels",
-    "subcategory": "Girls' Hostels",
-    "aliases": [
-      "PG Hostel",
-      "PG-Hostel",
-      "MTech Hostel",
-      "PhD Hostel"
-    ],
-    "description": "Dedicated quiet residential block for postgraduate M.E., M.Tech, and Ph.D. research scholars, providing single-occupancy rooms and undisturbed study environment.",
-    "coordinates": [
-      30.351857,
-      76.366142
-    ],
-    "block": "South Central Sector",
-    "facilities": [
-      "Single Occupancy Rooms",
-      "Mess",
-      "Quiet Study Zone",
-      "Wi-Fi",
-      "Parking"
-    ],
-    "sublocations": [
-      {
-        "name": "PG Dining Mess",
-        "code": "PG-MESS"
-      }
-    ],
-    "nearby": [
-      "hostel-a-agira",
-      "hostel-d-vahni",
-      "auditorium"
-    ],
-    "quickNav": false,
-    "openingHours": "Residential Access"
-  },
-  {
-    "id": "vasudha-hall",
-    "name": "Vasudha Hall",
-    "category": "Hostels",
-    "subcategory": "Girls' Hostels",
-    "aliases": [
-      "Vasudha Hall",
-      "Vasudha",
-      "Hostel Vasudha"
-    ],
-    "description": "Comfortable girls' residential accommodation located in close proximity to the student activity centre and academic blocks.",
-    "coordinates": [
-      30.354836,
-      76.366616
-    ],
-    "block": "North Central Residential Zone",
-    "facilities": [
-      "24x7 Security",
-      "Dining Mess",
-      "Wi-Fi",
-      "Reading Room"
-    ],
-    "sublocations": [
-      {
-        "name": "Vasudha Mess & Common Hall",
-        "code": "VASUDHA-MESS"
-      }
-    ],
-    "nearby": [
-      "hostel-i-ira",
-      "hostel-e",
-      "swimming-pool"
-    ],
-    "quickNav": false,
-    "openingHours": "Residential Access"
-  },
-  {
-    "id": "guest-house",
-    "name": "TIET Executive Guest House",
-    "category": "Other Campus Facilities",
-    "subcategory": "Guest Accommodation",
-    "aliases": [
-      "Guest House",
-      "University Guest House",
-      "TIET Guest House",
-      "VIP Guest House",
-      "Visitor Lodge"
-    ],
-    "description": "Executive residential guest facility offering air-conditioned VIP suites, banquet dining, quiet conference lounges, and hospitality for visiting delegates, professors, and parents.",
-    "coordinates": [
-      30.3571,
-      76.3658
-    ],
-    "block": "North Campus Hospitality Sector",
-    "facilities": [
-      "VIP AC Suites",
-      "Banquet Dining Hall",
-      "Conference Lounge",
-      "Room Service",
-      "High Speed Internet",
-      "Car Parking"
-    ],
-    "sublocations": [
-      {
-        "name": "Reception Desk & Lounge",
-        "code": "GH-RECEPTION"
-      },
-      {
-        "name": "Executive Dining Room",
-        "code": "GH-DINING"
-      }
-    ],
-    "nearby": [
-      "polytechnic-building",
-      "dirghayu-ayurvedic-hospital",
-      "cricket-ground"
-    ],
-    "quickNav": true,
-    "openingHours": "24/7 (Advance University Booking Required)"
-  },
-  {
-    "id": "faculty-residences",
-    "name": "Faculty Residential Complexes (FRE & FRF Blocks)",
-    "category": "Other Campus Facilities",
-    "subcategory": "Guest Accommodation",
-    "aliases": [
-      "Faculty Flats",
-      "Staff Quarters",
-      "Faculty Residences",
-      "FRE",
-      "FRF",
-      "Professor Quarters"
-    ],
-    "description": "On-campus residential quarters for university professors, associate deans, and senior non-teaching staff, with tree-lined avenues and internal parks.",
-    "coordinates": [
-      30.35478,
-      76.3595
-    ],
-    "block": "West Campus Residential Sector",
-    "facilities": [
-      "Residential Parking",
-      "Children Play Parks",
-      "24x7 Security Gate"
-    ],
-    "sublocations": [
-      {
-        "name": "FRE Residential Towers",
-        "code": "FRE"
-      },
-      {
-        "name": "FRF Residential Flats",
-        "code": "FRF"
-      }
-    ],
-    "nearby": [
-      "back-gate",
-      "athletic-track",
-      "central-fountain"
-    ],
-    "quickNav": false,
-    "openingHours": "Residential Area"
-  },
-  {
-    "id": "directorate",
-    "name": "Directorate (Administrative Block)",
-    "category": "Administrative Buildings",
-    "subcategory": "Administrative Offices",
-    "aliases": [
-      "Directorate",
-      "Admin Block",
-      "Director Office",
-      "Administration Building",
-      "Registrar Office",
-      "Accounts Department",
-      "Academic Section"
-    ],
-    "description": "Central administrative headquarters of TIET, housing the Director's Office, Registrar, Accounts Division, Academic Affairs Directorate, and central boardrooms.",
-    "coordinates": [
-      30.352671,
-      76.371756
-    ],
-    "block": "Southeast Administrative Sector",
-    "facilities": [
-      "Director Boardroom",
-      "Registrar Counter",
-      "Accounts & Fee Counter",
-      "Visitor Reception",
-      "Restrooms"
-    ],
-    "sublocations": [
-      {
-        "name": "Director's Secretariat",
-        "code": "ADM-DIR"
-      },
-      {
-        "name": "Registrar Office",
-        "code": "ADM-REG"
-      },
-      {
-        "name": "Accounts & Student Fee Section",
-        "code": "ADM-ACC"
-      },
-      {
-        "name": "Academic Affairs Section",
-        "code": "ADM-ACAD"
-      }
-    ],
-    "nearby": [
-      "auditorium",
-      "b-block",
-      "main-gate",
-      "streat-cafe"
-    ],
-    "quickNav": true,
-    "openingHours": "09:00 AM - 05:00 PM (Mon-Fri)"
-  },
-  {
-    "id": "dean-office",
-    "name": "Dean's Office (Student & Academic Affairs)",
-    "category": "Administrative Buildings",
-    "subcategory": "Administrative Offices",
-    "aliases": [
-      "Dean Office",
-      "Dean's Office",
-      "DOSA",
-      "DOAA",
-      "Dean of Student Affairs",
-      "Dean Academic Affairs"
-    ],
-    "description": "Key administrative node overseeing student welfare, campus disciplinary matters, scholarship distribution, academic compliance, and student societies.",
-    "coordinates": [
-      30.35533,
-      76.370653
-    ],
-    "block": "North Academic Quad",
-    "facilities": [
-      "Student Grievance Cell",
-      "Scholarship Desk",
-      "Society Approval Counter",
-      "Meeting Room"
-    ],
-    "sublocations": [
-      {
-        "name": "Dean of Student Affairs (DOSA)",
-        "code": "DOSA"
-      },
-      {
-        "name": "Dean of Academic Affairs (DOAA)",
-        "code": "DOAA"
-      }
-    ],
-    "nearby": [
-      "lt-building",
-      "nava-nalanda-library",
-      "venture-lab"
-    ],
-    "quickNav": false,
-    "openingHours": "09:00 AM - 05:00 PM (Mon-Fri)"
-  },
-  {
-    "id": "auditorium",
-    "name": "Main University Auditorium",
-    "category": "Other Campus Facilities",
-    "subcategory": "Administrative Offices",
-    "aliases": [
-      "Main Auditorium",
-      "Auditorium",
-      "Audi",
-      "Thapar Auditorium",
-      "Convocation Hall"
-    ],
-    "description": "Flagship 1,200-seat university auditorium equipped with advanced acoustics, theatrical lighting, green rooms, and orchestra pit; venue for convocations, cultural festivals, and international conferences.",
-    "coordinates": [
-      30.35199,
-      76.370652
-    ],
-    "block": "South Sector",
-    "facilities": [
-      "1,200 Tiered Seats",
-      "Green Rooms",
-      "Central AC",
-      "VIP Green Lounge",
-      "AV Control Room"
-    ],
-    "sublocations": [
-      {
-        "name": "Auditorium Main Stage & Hall",
-        "code": "AUDI-MAIN"
-      },
-      {
-        "name": "VIP Foyer & Reception",
-        "code": "AUDI-FOYER"
-      }
-    ],
-    "nearby": [
-      "directorate",
-      "b-block",
-      "streat-cafe",
-      "sbop-lawns"
-    ],
-    "quickNav": true,
-    "openingHours": "Open during university events & rehearsals"
-  },
-  {
-    "id": "dirghayu-ayurvedic-hospital",
-    "name": "Health Centre & Medical Dispensary",
-    "category": "Other Campus Facilities",
-    "subcategory": "Medical Centre",
-    "aliases": [
-      "Health Centre",
-      "Medical Centre",
-      "Dispensary",
-      "Dirghayu Ayurvedic Hospital",
-      "Campus Clinic",
-      "Doctor Clinic",
-      "Ambulance Station"
-    ],
-    "description": "Campus medical healthcare centre offering outpatient consultation, emergency care, primary dressing, pharmacy, physiotherapy, and 24x7 ambulance standby service for campus residents.",
-    "coordinates": [
-      30.357622,
-      76.366484
-    ],
-    "block": "North Medical Sector",
-    "facilities": [
-      "Doctor Consultation Room",
-      "Emergency Ward",
-      "Campus Pharmacy",
-      "24x7 Ambulance Standby",
-      "Ayurvedic Treatment"
-    ],
-    "sublocations": [
-      {
-        "name": "Outpatient Emergency Clinic",
-        "code": "HC-OPD"
-      },
-      {
-        "name": "Dispensary & Medicine Counter",
-        "code": "HC-PHARM"
-      }
-    ],
-    "nearby": [
-      "guest-house",
-      "polytechnic-building",
-      "hostel-k-ambaram"
-    ],
-    "quickNav": true,
-    "openingHours": "24/7 Emergency Care (OPD: 09:00 AM - 06:00 PM)"
-  },
-  {
-    "id": "sbi-bank",
-    "name": "State Bank of India (SBI) & ATM Centre",
-    "category": "Other Campus Facilities",
-    "subcategory": "Bank & Post Office",
-    "aliases": [
-      "SBI",
-      "State Bank of India",
-      "Bank",
-      "ATM",
-      "Campus Bank",
-      "SBI ATM"
-    ],
-    "description": "Full-service State Bank of India campus branch offering banking services, educational loan facilitation, forex exchange, and 24x7 cash withdrawal/deposit ATMs.",
-    "coordinates": [
-      30.352612,
-      76.370522
-    ],
-    "block": "South Academic Plaza",
-    "facilities": [
-      "24x7 ATM",
-      "Cash Deposit Machine (CDM)",
-      "Passbook Printing Kiosk",
-      "Banking Counters"
-    ],
-    "sublocations": [
-      {
-        "name": "SBI Branch Banking Hall",
-        "code": "SBI-BRANCH"
-      },
-      {
-        "name": "24-Hour ATM Kiosks",
-        "code": "SBI-ATM"
-      }
-    ],
-    "nearby": [
-      "streat-cafe",
-      "auditorium",
-      "directorate",
-      "sbop-lawns"
-    ],
-    "quickNav": false,
-    "openingHours": "10:00 AM - 04:00 PM (ATMs: 24/7)"
-  },
-  {
-    "id": "gurudwara",
-    "name": "Campus Gurudwara Sahib",
-    "category": "Other Campus Facilities",
-    "subcategory": "Worship & Reflection",
-    "aliases": [
-      "Gurudwara",
-      "Campus Gurudwara",
-      "Gurdwara Sahib",
-      "Place of Worship"
-    ],
-    "description": "Serene spiritual haven and Gurudwara located near the south student hostels, welcoming students and faculty for daily prayers, tranquility, and community langar on auspicious occasions.",
-    "coordinates": [
-      30.352243,
-      76.362526
-    ],
-    "block": "South Residential Garden",
-    "facilities": [
-      "Prayer Hall",
-      "Langar Hall",
-      "Sarovar/Water Steps",
-      "Shoe & Head-Cover Counter"
-    ],
-    "sublocations": [
-      {
-        "name": "Darbar Hall & Diwan Area",
-        "code": "GURUDWARA-MAIN"
-      }
-    ],
-    "nearby": [
-      "hostel-b-amritam",
-      "hostel-o-vyom",
-      "central-fountain"
-    ],
-    "quickNav": false,
-    "openingHours": "05:00 AM - 09:00 PM daily"
-  },
-  {
-    "id": "main-gate",
-    "name": "TIET Main Gate (Gate 1 - Bhadson Road)",
-    "category": "Other Campus Facilities",
-    "subcategory": "Gates & Transit",
-    "aliases": [
-      "Main Gate",
-      "Gate 1",
-      "Front Gate",
-      "Bhadson Road Gate",
-      "Security Gate 1",
-      "Campus Entrance"
-    ],
-    "description": "Primary formal entrance to Thapar University on Bhadson Road, featuring 24x7 security monitoring, visitor vehicle pass registration, automated boom barriers, and e-rickshaw terminal.",
-    "coordinates": [
-      30.35235,
-      76.37285
-    ],
-    "block": "East Boundary",
-    "facilities": [
-      "Security Guard Cabin",
-      "Visitor Registration",
-      "Boom Barriers",
-      "E-Rickshaw Stand",
-      "Pedestrian Turnstile"
-    ],
-    "sublocations": [
-      {
-        "name": "Visitor Pass Verification Desk",
-        "code": "GATE1-SEC"
-      },
-      {
-        "name": "Campus E-Rickshaw Pickup Stand",
-        "code": "GATE1-RICK"
-      }
-    ],
-    "nearby": [
-      "directorate",
-      "e-block",
-      "b-block"
-    ],
-    "quickNav": true,
-    "openingHours": "24/7 Guarded Access"
-  },
-  {
-    "id": "back-gate",
-    "name": "Back Gate (Gate 3 - Adarsh Nagar Side)",
-    "category": "Other Campus Facilities",
-    "subcategory": "Gates & Transit",
-    "aliases": [
-      "Back Gate",
-      "Gate 3",
-      "Hostel Gate",
-      "West Gate"
-    ],
-    "description": "Guarded west perimeter gateway primarily utilized by resident students and hostel commuters connecting to local markets and transit points.",
-    "coordinates": [
-      30.353024,
-      76.35912
-    ],
-    "block": "West Boundary",
-    "facilities": [
-      "Security Checkpoint",
-      "Pedestrian Gate",
-      "Bicycle Parking"
-    ],
-    "sublocations": [
-      {
-        "name": "West Guard Post",
-        "code": "GATE3-SEC"
-      }
-    ],
-    "nearby": [
-      "hostel-m-anantam",
-      "faculty-residences",
-      "athletic-track"
-    ],
-    "quickNav": false,
-    "openingHours": "06:00 AM - 10:00 PM"
-  },
-  {
-    "id": "cos-complex",
-    "name": "COS Complex & Central Food Court",
-    "category": "Food Courts and Cafes",
-    "subcategory": "Food Courts",
-    "aliases": [
-      "COS",
-      "COS Complex",
-      "Centre for Outstanding Students",
-      "COS Food Court",
-      "Student Plaza",
-      "Food Court",
-      "Market"
-    ],
-    "description": "The bustling heart of campus social life and dining, hosting multiple popular cafes, bakeries, juice bars, stationery stores, salon, and shaded open-air seating.",
-    "coordinates": [
-      30.354235,
-      76.362393
-    ],
-    "block": "Central Student Sector",
-    "facilities": [
-      "Multiple Cuisine Stalls",
-      "Outdoor & Indoor Seating",
-      "Stationery Shop",
-      "Hair Salon",
-      "Online UPI Payments",
-      "Water Coolers"
-    ],
-    "sublocations": [
-      {
-        "name": "Jaggi Sweets & Snacks",
-        "code": "COS-JAGGI"
-      },
-      {
-        "name": "Wrapchik Quick Bites",
-        "code": "COS-WRAPCHIK"
-      },
-      {
-        "name": "Dessert Club Ice Cream & Waffles",
-        "code": "COS-DESSERT"
-      },
-      {
-        "name": "Chai Nagri Tea Bar",
-        "code": "COS-CHAINAGRI"
-      },
-      {
-        "name": "Honey Cafe & Juices",
-        "code": "COS-HONEY"
-      },
-      {
-        "name": "Bombay Munchery",
-        "code": "COS-BOMBAY"
-      },
-      {
-        "name": "Campus Stationery & Print Store",
-        "code": "COS-STORE"
-      },
-      {
-        "name": "Shadow Salon",
-        "code": "COS-SALON"
-      }
-    ],
-    "nearby": [
-      "tan-complex",
-      "athletic-track",
-      "sports-ground",
-      "swimming-pool"
-    ],
-    "quickNav": true,
-    "openingHours": "09:00 AM - 11:30 PM"
-  },
-  {
-    "id": "streat-cafe",
-    "name": "Streat Cafe & Bakery",
-    "category": "Food Courts and Cafes",
-    "subcategory": "Cafeterias",
-    "aliases": [
-      "Streat Cafe",
-      "Streat",
-      "Admin Canteen",
-      "Audi Canteen"
-    ],
-    "description": "Chic and modern air-conditioned cafe situated near the main auditorium and Directorate, offering fresh coffee, artisanal sandwiches, pastries, and Italian delicacies.",
-    "coordinates": [
-      30.352694,
-      76.370774
-    ],
-    "block": "South Academic Plaza",
-    "facilities": [
-      "Indoor AC Seating",
-      "Espresso Bar",
-      "Bakery Display",
-      "Wi-Fi"
-    ],
-    "sublocations": [
-      {
-        "name": "Streat Counter & Coffee Bar",
-        "code": "STREAT-BAR"
-      }
-    ],
-    "nearby": [
-      "auditorium",
-      "sbi-bank",
-      "b-block",
-      "directorate"
-    ],
-    "quickNav": false,
-    "openingHours": "09:00 AM - 10:30 PM"
-  },
-  {
-    "id": "waterbody-cafe",
-    "name": "Waterbody Cafe (Lakeview Eatery)",
-    "category": "Food Courts and Cafes",
-    "subcategory": "Cafeterias",
-    "aliases": [
-      "Waterbody Cafe",
-      "Water Body Cafe",
-      "Lakeview Cafe",
-      "LT Cafe",
-      "Waterbody Canteen"
-    ],
-    "description": "Scenic outdoor and semi-covered cafeteria situated right beside the university landscaped waterbody and the lecture hall complex, perfect for quick meal breaks between lectures.",
-    "coordinates": [
-      30.355074,
-      76.369935
-    ],
-    "block": "Central Water Quad",
-    "facilities": [
-      "Lakeview Deck Seating",
-      "Fast Food",
-      "Cold Beverages",
-      "Hot Tea/Coffee"
-    ],
-    "sublocations": [
-      {
-        "name": "Waterbody Food Kiosk",
-        "code": "WB-KIOSK"
-      }
-    ],
-    "nearby": [
-      "lt-building",
-      "nava-nalanda-library",
-      "dean-office"
-    ],
-    "quickNav": false,
-    "openingHours": "08:30 AM - 09:30 PM"
-  },
-  {
-    "id": "g-block-canteen",
-    "name": "G-Block Canteen",
-    "category": "Food Courts and Cafes",
-    "subcategory": "Dining Outlets",
-    "aliases": [
-      "G Block Canteen",
-      "G Canteen",
-      "G-Block Food Stall"
-    ],
-    "description": "Popular student eatery serving fresh paranthas, hot samosas, maggi, tea, and quick meals situated right between G-Block and the Central Library.",
-    "coordinates": [
-      30.352806,
-      76.368935
-    ],
-    "block": "Central Academic Quad",
-    "facilities": [
-      "Quick Takeaway",
-      "Outdoor Garden Benches",
-      "Tea Stall"
-    ],
-    "sublocations": [
-      {
-        "name": "G-Block Meal Counter",
-        "code": "G-CANTEEN"
-      }
-    ],
-    "nearby": [
-      "g-block",
-      "tan-complex",
-      "sbop-lawns",
-      "nava-nalanda-library"
-    ],
-    "quickNav": false,
-    "openingHours": "08:00 AM - 08:00 PM"
-  },
-  {
-    "id": "tslas-canteen",
-    "name": "TSLAS Canteen & Juice Bar",
-    "category": "Food Courts and Cafes",
-    "subcategory": "Cafeterias",
-    "aliases": [
-      "TSLAS Canteen",
-      "North Campus Canteen",
-      "Liberal Arts Canteen"
-    ],
-    "description": "Modern cafeteria catering to north campus students and visitors, offering healthy salads, smoothies, fresh fruit juices, and light continental snacks.",
-    "coordinates": [
-      30.356836,
-      76.371604
-    ],
-    "block": "North Campus Academic Sector",
-    "facilities": [
-      "Indoor Seating",
-      "Juice Bar",
-      "Snacks Counter"
-    ],
-    "sublocations": [
-      {
-        "name": "TSLAS Beverage & Snack Desk",
-        "code": "TSLAS-FOOD"
-      }
-    ],
-    "nearby": [
-      "tslas-building",
-      "venture-lab",
-      "polytechnic-building"
-    ],
-    "quickNav": false,
-    "openingHours": "09:00 AM - 06:00 PM"
-  },
-  {
-    "id": "ahaar-food-point",
-    "name": "Ahaar Food Point",
-    "category": "Food Courts and Cafes",
-    "subcategory": "Dining Outlets",
-    "aliases": [
-      "Ahaar",
-      "Ahaar Restaurant",
-      "East Gate Canteen"
-    ],
-    "description": "Convenient food point located on the eastern university lane offering North Indian thalis, rolls, and quick snacks.",
-    "coordinates": [
-      30.353014,
-      76.372179
-    ],
-    "block": "East Campus Lane",
-    "facilities": [
-      "Takeaway Counter",
-      "Thali Meals",
-      "Beverages"
-    ],
-    "sublocations": [
-      {
-        "name": "Ahaar Counter",
-        "code": "AHAAR-MAIN"
-      }
-    ],
-    "nearby": [
-      "e-block",
-      "directorate",
-      "main-gate"
-    ],
-    "quickNav": false,
-    "openingHours": "10:00 AM - 09:00 PM"
-  },
-  {
-    "id": "athletic-track",
-    "name": "Athletic Stadium & Synthetic Running Track",
-    "category": "Sports Facilities",
-    "subcategory": "Sports Grounds",
-    "aliases": [
-      "Athletic Track",
-      "Synthetic Track",
-      "Running Track",
-      "Sports Stadium",
-      "Athletic Ground",
-      "Football Field"
-    ],
-    "description": "Standard 400-meter all-weather synthetic running track encircling the central soccer field, fitted with floodlights for evening athletic tournaments and morning jogging.",
-    "coordinates": [
-      30.354353,
-      76.361273
-    ],
-    "block": "West Sports Zone",
-    "facilities": [
-      "400m Synthetic Running Track",
-      "Football Pitch",
-      "High-Mast Floodlights",
-      "Spectator Bleachers"
-    ],
-    "sublocations": [
-      {
-        "name": "Main Football Pitch",
-        "code": "SPORTS-SOCCER"
-      },
-      {
-        "name": "Synthetic Sprint Lanes",
-        "code": "SPORTS-TRACK"
-      }
-    ],
-    "nearby": [
-      "cos-complex",
-      "cricket-ground",
-      "central-fountain",
-      "hostel-m-anantam"
-    ],
-    "quickNav": true,
-    "openingHours": "05:30 AM - 09:30 AM, 04:30 PM - 09:00 PM"
-  },
-  {
-    "id": "swimming-pool",
-    "name": "University Swimming Pool Complex",
-    "category": "Sports Facilities",
-    "subcategory": "Gym Facilities",
-    "aliases": [
-      "Swimming Pool",
-      "Campus Pool",
-      "Aquatic Centre"
-    ],
-    "description": "Olympic-sized 8-lane swimming pool complex staffed with certified lifeguards, modern water filtration, separate changing facilities, and dedicated student swimming batches.",
-    "coordinates": [
-      30.354427,
-      76.365966
-    ],
-    "block": "Central Sports Zone",
-    "facilities": [
-      "Olympic Size Pool",
-      "Locker Rooms & Showers",
-      "Certified Lifeguards",
-      "Spectator Stand"
-    ],
-    "sublocations": [
-      {
-        "name": "Pool Reception & Coach Office",
-        "code": "POOL-OFFICE"
-      }
-    ],
-    "nearby": [
-      "tennis-courts",
-      "g-hostel",
-      "hostel-n-ananta",
-      "volleyball-courts"
-    ],
-    "quickNav": true,
-    "openingHours": "06:00 AM - 09:00 AM, 04:30 PM - 08:00 PM (Seasonal)"
-  },
-  {
-    "id": "cricket-ground",
-    "name": "TIET Cricket Pavilion & Ground",
-    "category": "Sports Facilities",
-    "subcategory": "Sports Grounds",
-    "aliases": [
-      "Cricket Ground",
-      "Cricket Field",
-      "Cricket Pitch",
-      "Pavilion Ground"
-    ],
-    "description": "Full-size lush turf cricket oval with natural turf practice nets, scoreboard, and pavilion hosting inter-university cricket trophies and weekend tournaments.",
-    "coordinates": [
-      30.355823,
-      76.363672
-    ],
-    "block": "Northwest Sports Sector",
-    "facilities": [
-      "Turf Pitch",
-      "Practice Net Cages",
-      "Cricket Pavilion",
-      "Boundary Ropes"
-    ],
-    "sublocations": [
-      {
-        "name": "Cricket Pavilion & Dressing Room",
-        "code": "CRICKET-PAV"
-      }
-    ],
-    "nearby": [
-      "athletic-track",
-      "tennis-courts",
-      "hostel-k-ambaram",
-      "cos-complex"
-    ],
-    "quickNav": false,
-    "openingHours": "06:00 AM - 07:30 PM"
-  },
-  {
-    "id": "tennis-courts",
-    "name": "Tennis Complex (Floodlit Hard Courts)",
-    "category": "Sports Facilities",
-    "subcategory": "Gym Facilities",
-    "aliases": [
-      "Tennis Court",
-      "Tennis Courts",
-      "Lawn Tennis",
-      "Synthetic Tennis"
-    ],
-    "description": "Six regulation synthetic hard tennis courts with fencing, tournament nets, and evening LED floodlighting for practice matches and coaching academies.",
-    "coordinates": [
-      30.3552,
-      76.3644
-    ],
-    "block": "Central North Sports Zone",
-    "facilities": [
-      "Regulation Hard Courts",
-      "LED Floodlights",
-      "Practice Walls",
-      "Seating Benches"
-    ],
-    "sublocations": [
-      {
-        "name": "Tournament Court 1 & 2",
-        "code": "TENNIS-MAIN"
-      }
-    ],
-    "nearby": [
-      "volleyball-courts",
-      "swimming-pool",
-      "cricket-ground"
-    ],
-    "quickNav": false,
-    "openingHours": "06:00 AM - 09:00 PM"
-  },
-  {
-    "id": "volleyball-courts",
-    "name": "Volleyball & Basketball Arena",
-    "category": "Sports Facilities",
-    "subcategory": "Gym Facilities",
-    "aliases": [
-      "Volleyball Court",
-      "Basketball Court",
-      "Volleyball",
-      "Basketball"
-    ],
-    "description": "Multi-court outdoor athletic enclosure featuring regulation clay/synthetic volleyball courts and concrete basketball courts with fiberglass backboards.",
-    "coordinates": [
-      30.355222,
-      76.365237
-    ],
-    "block": "Central North Sports Zone",
-    "facilities": [
-      "Volleyball Courts",
-      "Basketball Hoops",
-      "Floodlights",
-      "Water Point"
-    ],
-    "sublocations": [
-      {
-        "name": "Volleyball Court 1 & 2",
-        "code": "VBALL-1"
-      }
-    ],
-    "nearby": [
-      "tennis-courts",
-      "swimming-pool",
-      "hostel-e"
-    ],
-    "quickNav": false,
-    "openingHours": "06:00 AM - 09:30 PM"
-  },
-  {
-    "id": "oat-theatre",
-    "name": "Open Air Theatre (OAT)",
-    "category": "Sports Facilities",
-    "subcategory": "Student Activity Centres",
-    "aliases": [
-      "OAT",
-      "Open Air Theatre",
-      "Amphitheatre",
-      "OAT Ground",
-      "Cultural Stage"
-    ],
-    "description": "Iconic tiered outdoor amphitheatre accommodating 3,000+ spectators, the cultural nerve-centre for rock concerts, street plays (Nukkad Natak), society nights, and Saturnalia events.",
-    "coordinates": [
-      30.353057,
-      76.363398
-    ],
-    "block": "Southwest Cultural Quad",
-    "facilities": [
-      "Amphitheatre Tiered Seating",
-      "Elevated Performance Stage",
-      "Acoustic Backwall",
-      "Stage Lighting Rigs"
-    ],
-    "sublocations": [
-      {
-        "name": "OAT Performance Stage",
-        "code": "OAT-STAGE"
-      },
-      {
-        "name": "Tiered Amphitheatre Steps",
-        "code": "OAT-STEPS"
-      }
-    ],
-    "nearby": [
-      "hostel-j-tejas",
-      "hostel-b-amritam",
-      "hostel-h-vyan",
-      "cos-complex"
-    ],
-    "quickNav": true,
-    "openingHours": "Open access (Evening events & society rehearsals)"
-  },
-  {
-    "id": "central-fountain",
-    "name": "Central Fountain & McCullough Walkway Plaza",
-    "category": "Other Campus Facilities",
-    "subcategory": "Student Activity Centres",
-    "aliases": [
-      "Central Fountain",
-      "Fountain Plaza",
-      "Fountain Park",
-      "Water Fountain",
-      "Tower Plaza"
-    ],
-    "description": "Scenic illuminated water fountain plaza encircled by contemporary red-brick colonnades, reflecting pools, landscaped grass mounds, and walking promenades.",
-    "coordinates": [
-      30.352461,
-      76.360886
-    ],
-    "block": "Southwest Garden Sector",
-    "facilities": [
-      "Illuminated Jet Fountain",
-      "Curved Promenade Benches",
-      "Lawn Mounds",
-      "Path Lighting"
-    ],
-    "sublocations": [
-      {
-        "name": "Central Fountain Basin",
-        "code": "FOUNTAIN-BASIN"
-      }
-    ],
-    "nearby": [
-      "hostel-m-anantam",
-      "hostel-c-prithvi",
-      "gurudwara"
-    ],
-    "quickNav": false,
-    "openingHours": "06:00 AM - 10:30 PM"
-  },
-  {
-    "id": "sbop-lawns",
-    "name": "SBOP Lawns & Student Garden Quad",
-    "category": "Other Campus Facilities",
-    "subcategory": "Student Activity Centres",
-    "aliases": [
-      "SBOP Lawns",
-      "SBOP Lawn",
-      "Central Garden",
-      "Library Lawns",
-      "Academic Lawns"
-    ],
-    "description": "Expansive manicured green lawns located between the Central Library, G-Block, and Auditorium, a favorite student gathering hub for discussions, winter sunbathing, and reading.",
-    "coordinates": [
-      30.352204,
-      76.370041
-    ],
-    "block": "Central Academic Green",
-    "facilities": [
-      "Shaded Trees",
-      "Park Benches",
-      "Walking Pathways",
-      "Manicured Grass"
-    ],
-    "sublocations": [
-      {
-        "name": "Central Grass Amphitheatre Lawn",
-        "code": "SBOP-GRASS"
-      }
-    ],
-    "nearby": [
-      "nava-nalanda-library",
-      "auditorium",
-      "sbi-bank",
-      "g-block"
-    ],
-    "quickNav": false,
-    "openingHours": "Open 24/7"
-  }
-];
+    const TIET_BOUNDS = {
+        minLat: 30.3450,
+        maxLat: 30.3620,
+        minLng: 76.3550,
+        maxLng: 76.3780
+    };
 
-  // Internal registries
-  const locationMap = new Map();
-  const aliasIndex = new Map();
+    const VALID_CATEGORIES = new Set([
+        'academic',
+        'hostel',
+        'dining',
+        'admin',
+        'sports',
+        'landmark',
+        'medical',
+        'gate'
+    ]);
 
-  function indexLocations(data) {
-    locationMap.clear();
-    aliasIndex.clear();
+    const RAW_LOCATIONS = [
+        // --- Academic Blocks & Labs ---
+        {
+            id: 'c_block',
+            name: 'C Block (Main Academic)',
+            aliases: ['C-Block', 'Computer Science Block', 'Main Block'],
+            category: 'academic',
+            lat: 30.35435,
+            lng: 76.36940,
+            nearestNode: 'N_c_block',
+            description: 'Central academic block housing core engineering departments, classrooms, and faculty offices.',
+            hours: '8:00 AM – 8:00 PM',
+            floors: 3
+        },
+        {
+            id: 'b_block',
+            name: 'B Block',
+            aliases: ['B-Block', 'Mechanical Block'],
+            category: 'academic',
+            lat: 30.35385,
+            lng: 76.36905,
+            nearestNode: 'N_b_block',
+            description: 'Engineering laboratories, workshops, and lecture halls adjacent to C Block.',
+            hours: '8:00 AM – 7:00 PM',
+            floors: 3
+        },
+        {
+            id: 'd_block',
+            name: 'D Block',
+            aliases: ['D-Block', 'Electronics Block', 'ECED'],
+            category: 'academic',
+            lat: 30.35475,
+            lng: 76.36885,
+            nearestNode: 'N_d_block',
+            description: 'Department of Electronics & Communication Engineering and research labs.',
+            hours: '8:00 AM – 8:00 PM',
+            floors: 3
+        },
+        {
+            id: 'e_block',
+            name: 'E Block',
+            aliases: ['E-Block', 'Electrical Block', 'EIED'],
+            category: 'academic',
+            lat: 30.35510,
+            lng: 76.36945,
+            nearestNode: 'N_e_block',
+            description: 'Electrical & Instrumentation Engineering labs and seminar rooms.',
+            hours: '8:00 AM – 7:00 PM',
+            floors: 3
+        },
+        {
+            id: 'f_block',
+            name: 'F Block',
+            aliases: ['F-Block', 'Chemical Civil Block'],
+            category: 'academic',
+            lat: 30.35345,
+            lng: 76.36965,
+            nearestNode: 'N_f_block',
+            description: 'Civil and Chemical Engineering departments and testing facilities.',
+            hours: '8:00 AM – 7:00 PM',
+            floors: 3
+        },
+        {
+            id: 'g_block',
+            name: 'G Block',
+            aliases: ['G-Block', 'Biotech Block'],
+            category: 'academic',
+            lat: 30.35540,
+            lng: 76.36860,
+            nearestNode: 'N_g_block',
+            description: 'Biotechnology and Sciences laboratories and lecture rooms.',
+            hours: '8:00 AM – 7:00 PM',
+            floors: 3
+        },
+        {
+            id: 'h_block',
+            name: 'H Block',
+            aliases: ['H-Block'],
+            category: 'academic',
+            lat: 30.35315,
+            lng: 76.36875,
+            nearestNode: 'N_h_block',
+            description: 'Academic classrooms and tutorial rooms near the southern academic quad.',
+            hours: '8:00 AM – 6:00 PM',
+            floors: 2
+        },
+        {
+            id: 'tan',
+            name: 'TAN Building (Academic Block)',
+            aliases: ['TAN', 'TAN Academic Block', 'Thapar Academic Complex'],
+            category: 'academic',
+            lat: 30.35380,
+            lng: 76.36795,
+            nearestNode: 'N_tan',
+            description: 'Multi-storey modern lecture complex, computer labs, and tutorial rooms.',
+            hours: '8:00 AM – 9:00 PM',
+            floors: 4
+        },
+        {
+            id: 'lt',
+            name: 'Lecture Theatre Complex (LT)',
+            aliases: ['LT', 'Lecture Theatres', 'LT-101', 'LT-102'],
+            category: 'academic',
+            lat: 30.35470,
+            lng: 76.36790,
+            nearestNode: 'N_lt',
+            description: 'Large tiered lecture halls (LT-101 to LT-104) for first-year and core courses.',
+            hours: '8:00 AM – 8:00 PM',
+            floors: 2
+        },
+        {
+            id: 'csed',
+            name: 'CSED Building',
+            aliases: ['CSED', 'Computer Science Department', 'CSE'],
+            category: 'academic',
+            lat: 30.35525,
+            lng: 76.36785,
+            nearestNode: 'N_csed',
+            description: 'Computer Science & Engineering Department hub, AI/ML labs, and faculty cabins.',
+            hours: '8:00 AM – 9:00 PM',
+            floors: 4
+        },
+        {
+            id: 'library',
+            name: 'Nava Nalanda Central Library',
+            aliases: ['Library', 'Central Library', 'Nava Nalanda', 'Reading Room'],
+            category: 'academic',
+            lat: 30.35425,
+            lng: 76.37045,
+            nearestNode: 'N_library',
+            description: 'Five-storey central library with digital archives, quiet reading halls, and group study pods.',
+            hours: '8:00 AM – 12:00 AM',
+            floors: 5
+        },
+        {
+            id: 'lmtsm',
+            name: 'LM Thapar School of Management',
+            aliases: ['LMTSM', 'Management School', 'MBA Block'],
+            category: 'academic',
+            lat: 30.35630,
+            lng: 76.36180,
+            nearestNode: 'N_lmtsm',
+            description: 'Business school campus housing MBA lecture theatres, MDP centre, and executive suites.',
+            hours: '8:30 AM – 8:00 PM',
+            floors: 4
+        },
 
-    data.forEach(loc => {
-      if (!loc.id || !loc.name || !loc.coordinates) {
-        console.error('[CampusRoutes] Invalid location entry:', loc);
-        return;
-      }
-      if (locationMap.has(loc.id)) {
-        console.warn('[CampusRoutes] Duplicate location ID blocked:', loc.id);
-        return;
-      }
+        // --- Administration & Landmarks ---
+        {
+            id: 'admin_block',
+            name: 'Administrative Block (Directorate)',
+            aliases: ['Admin Block', 'Director Office', 'Registrar', 'Accounts'],
+            category: 'admin',
+            lat: 30.35325,
+            lng: 76.37080,
+            nearestNode: 'N_admin',
+            description: 'Office of the Director, Registrar, Academic Affairs, and Student Accounts.',
+            hours: '9:00 AM – 5:30 PM',
+            floors: 2
+        },
+        {
+            id: 'main_audi',
+            name: 'Main Auditorium',
+            aliases: ['Auditorium', 'Main Audi', 'OAT'],
+            category: 'landmark',
+            lat: 30.35365,
+            lng: 76.37120,
+            nearestNode: 'N_audi',
+            description: 'Primary campus auditorium hosting convocations, cultural fests, and keynote talks.',
+            hours: '9:00 AM – 9:00 PM',
+            floors: 2
+        },
+        {
+            id: 'skywalk',
+            name: 'Campus Skywalk & Central Plaza',
+            aliases: ['Skywalk', 'Central Plaza', 'Fountain Chowk'],
+            category: 'landmark',
+            lat: 30.35415,
+            lng: 76.36850,
+            nearestNode: 'N_skywalk',
+            description: 'Elevated pedestrian walkway and central student gathering plaza.',
+            hours: '24 Hours',
+            floors: 1
+        },
+        {
+            id: 'gurdwara',
+            name: 'Campus Gurdwara Sahib',
+            aliases: ['Gurdwara', 'Temple', 'Prayer Hall'],
+            category: 'landmark',
+            lat: 30.35260,
+            lng: 76.36820,
+            nearestNode: 'N_gurdwara',
+            description: 'Serene spiritual centre near the residential and southern hostel zone.',
+            hours: '5:00 AM – 9:00 PM',
+            floors: 1
+        },
+        {
+            id: 'sbi_bank',
+            name: 'SBI Campus Branch & ATMs',
+            aliases: ['SBI', 'Bank', 'ATM', 'State Bank of India'],
+            category: 'admin',
+            lat: 30.35290,
+            lng: 76.37155,
+            nearestNode: 'N_sbi',
+            description: 'State Bank of India branch with 24/7 ATM lobby near Gate 1.',
+            hours: '10:00 AM – 4:00 PM (ATMs 24/7)',
+            floors: 1
+        },
 
-      locationMap.set(loc.id, loc);
+        // --- Dining & Student Hubs ---
+        {
+            id: 'cos',
+            name: 'COS Complex (Student Activity Centre)',
+            aliases: ['COS', 'Commercial Complex', 'Food Court', 'Stationery'],
+            category: 'dining',
+            lat: 30.35495,
+            lng: 76.36625,
+            nearestNode: 'N_cos',
+            description: 'Main campus hub with eateries, cafes, photocopy shops, salon, and student club rooms.',
+            hours: '8:00 AM – 11:00 PM',
+            floors: 2
+        },
+        {
+            id: 'jaggu',
+            name: 'Jaggi Juice & Food Corner',
+            aliases: ['Jaggi', 'Jaggu', 'Juice Corner', 'G-Block Canteen'],
+            category: 'dining',
+            lat: 30.35555,
+            lng: 76.36815,
+            nearestNode: 'N_jaggu',
+            description: 'Popular student refreshment spot serving fresh juices, shakes, and quick snacks.',
+            hours: '8:00 AM – 10:00 PM',
+            floors: 1
+        },
+        {
+            id: 'aahar',
+            name: 'Aahar Cafeteria',
+            aliases: ['Aahar', 'Main Canteen', 'Library Canteen'],
+            category: 'dining',
+            lat: 30.35390,
+            lng: 76.37025,
+            nearestNode: 'N_aahar',
+            description: 'Central campus cafeteria near the Library and C Block serving meals and beverages.',
+            hours: '8:00 AM – 9:30 PM',
+            floors: 1
+        },
+        {
+            id: 'nirvana',
+            name: 'Nirvana Food Court',
+            aliases: ['Nirvana', 'Hostel Food Court'],
+            category: 'dining',
+            lat: 30.35565,
+            lng: 76.36460,
+            nearestNode: 'N_nirvana',
+            description: 'Evening food court and hangout zone serving the western hostel cluster.',
+            hours: '11:00 AM – 11:30 PM',
+            floors: 1
+        },
 
-      // Index normalized canonical name
-      const normName = loc.name.toLowerCase().trim();
-      aliasIndex.set(normName, loc.id);
+        // --- Hostels ---
+        {
+            id: 'hostel_a',
+            name: 'Hostel A (Agira Hall)',
+            aliases: ['Hostel A', 'Agira', 'Agira Hall'],
+            category: 'hostel',
+            lat: 30.35225,
+            lng: 76.36940,
+            nearestNode: 'N_hostel_a',
+            description: 'Boys residential hostel near the southern perimeter road.',
+            hours: '24 Hours (Resident Access)',
+            floors: 3
+        },
+        {
+            id: 'hostel_b',
+            name: 'Hostel B (Amritam Hall)',
+            aliases: ['Hostel B', 'Amritam', 'Amritam Hall'],
+            category: 'hostel',
+            lat: 30.35235,
+            lng: 76.36865,
+            nearestNode: 'N_hostel_b',
+            description: 'Boys residential hostel adjacent to Hostel A and Gurdwara.',
+            hours: '24 Hours (Resident Access)',
+            floors: 3
+        },
+        {
+            id: 'hostel_c',
+            name: 'Hostel C (Prithvi Hall)',
+            aliases: ['Hostel C', 'Prithvi', 'Prithvi Hall'],
+            category: 'hostel',
+            lat: 30.35275,
+            lng: 76.36735,
+            nearestNode: 'N_hostel_c',
+            description: 'Boys residential hostel located along the central-south pathway.',
+            hours: '24 Hours (Resident Access)',
+            floors: 3
+        },
+        {
+            id: 'hostel_e',
+            name: 'Hostel E (Neeram Hall)',
+            aliases: ['Hostel E', 'Neeram', 'Neeram Hall'],
+            category: 'hostel',
+            lat: 30.35335,
+            lng: 76.36630,
+            nearestNode: 'N_hostel_e',
+            description: 'Girls residential hostel complex near COS South.',
+            hours: '24 Hours (Resident Access)',
+            floors: 3
+        },
+        {
+            id: 'hostel_g',
+            name: 'Hostel G (Viyat Hall)',
+            aliases: ['Hostel G', 'Viyat', 'Viyat Hall'],
+            category: 'hostel',
+            lat: 30.35385,
+            lng: 76.36570,
+            nearestNode: 'N_hostel_g',
+            description: 'Girls residential hostel in the western hostel zone.',
+            hours: '24 Hours (Resident Access)',
+            floors: 3
+        },
+        {
+            id: 'hostel_h',
+            name: 'Hostel H (Tejas Hall)',
+            aliases: ['Hostel H', 'Tejas', 'Tejas Hall'],
+            category: 'hostel',
+            lat: 30.35445,
+            lng: 76.36535,
+            nearestNode: 'N_hostel_h',
+            description: 'Boys residential hostel south of the COS complex.',
+            hours: '24 Hours (Resident Access)',
+            floors: 4
+        },
+        {
+            id: 'hostel_i',
+            name: 'Hostel I (Ira Hall)',
+            aliases: ['Hostel I', 'Ira', 'Ira Hall'],
+            category: 'hostel',
+            lat: 30.35425,
+            lng: 76.36465,
+            nearestNode: 'N_hostel_i',
+            description: 'Girls residential hostel with dedicated dining and common room facilities.',
+            hours: '24 Hours (Resident Access)',
+            floors: 4
+        },
+        {
+            id: 'hostel_j',
+            name: 'Hostel J (Ambaram Hall)',
+            aliases: ['Hostel J', 'Ambaram', 'Ambaram Hall'],
+            category: 'hostel',
+            lat: 30.35495,
+            lng: 76.36475,
+            nearestNode: 'N_hostel_j',
+            description: 'Large multi-wing boys hostel adjacent to COS and Nirvana.',
+            hours: '24 Hours (Resident Access)',
+            floors: 4
+        },
+        {
+            id: 'hostel_k',
+            name: 'Hostel K (Anantam Hall)',
+            aliases: ['Hostel K', 'Anantam', 'Anantam Hall'],
+            category: 'hostel',
+            lat: 30.35585,
+            lng: 76.36535,
+            nearestNode: 'N_hostel_k',
+            description: 'Boys residential hostel near the northern sports complex.',
+            hours: '24 Hours (Resident Access)',
+            floors: 4
+        },
+        {
+            id: 'hostel_l',
+            name: 'Hostel L (Vyom Hall)',
+            aliases: ['Hostel L', 'Vyom', 'Vyom Hall'],
+            category: 'hostel',
+            lat: 30.35615,
+            lng: 76.36445,
+            nearestNode: 'N_hostel_l',
+            description: 'Residential hostel in the north-west campus sector.',
+            hours: '24 Hours (Resident Access)',
+            floors: 4
+        },
+        {
+            id: 'hostel_m',
+            name: 'Hostel M (Ananta Hall)',
+            aliases: ['Hostel M', 'Ananta', 'Ananta Hall'],
+            category: 'hostel',
+            lat: 30.35635,
+            lng: 76.36320,
+            nearestNode: 'N_hostel_m',
+            description: 'Modern multi-storey hostel block near LMTSM.',
+            hours: '24 Hours (Resident Access)',
+            floors: 7
+        },
+        {
+            id: 'hostel_n',
+            name: 'Hostel N (Dhriti Hall)',
+            aliases: ['Hostel N', 'Dhriti', 'Dhriti Hall'],
+            category: 'hostel',
+            lat: 30.35535,
+            lng: 76.36365,
+            nearestNode: 'N_hostel_n',
+            description: 'Girls residential hostel west of Nirvana Food Court.',
+            hours: '24 Hours (Resident Access)',
+            floors: 6
+        },
+        {
+            id: 'hostel_o',
+            name: 'Hostel O (Vahni Hall)',
+            aliases: ['Hostel O', 'Vahni', 'Vahni Hall'],
+            category: 'hostel',
+            lat: 30.35675,
+            lng: 76.36395,
+            nearestNode: 'N_hostel_o',
+            description: 'High-rise residential hostel in the north-western campus sector.',
+            hours: '24 Hours (Resident Access)',
+            floors: 7
+        },
+        {
+            id: 'hostel_pg',
+            name: 'PG Hostel (Postgraduate Hall)',
+            aliases: ['PG Hostel', 'Postgraduate Hostel'],
+            category: 'hostel',
+            lat: 30.35205,
+            lng: 76.37035,
+            nearestNode: 'N_hostel_pg',
+            description: 'Dedicated residential hall for postgraduate and doctoral scholars.',
+            hours: '24 Hours (Resident Access)',
+            floors: 3
+        },
 
-      // Index all aliases (e.g. "Hostel A", "Library", "LP 108", "CSED")
-      if (Array.isArray(loc.aliases)) {
-        loc.aliases.forEach(alias => {
-          const normAlias = alias.toLowerCase().trim();
-          if (!aliasIndex.has(normAlias)) {
-            aliasIndex.set(normAlias, loc.id);
-          }
-        });
-      }
+        // --- Sports & Medical ---
+        {
+            id: 'sports_complex',
+            name: 'TIET Sports Complex & Gymnasium',
+            aliases: ['Sports Complex', 'Gym', 'Indoor Stadium', 'Swimming Pool', 'Tennis Courts'],
+            category: 'sports',
+            lat: 30.35625,
+            lng: 76.36665,
+            nearestNode: 'N_sports',
+            description: 'Indoor badminton/basketball courts, fitness gym, swimming pool, and athletic tracks.',
+            hours: '6:00 AM – 9:00 PM',
+            floors: 2
+        },
+        {
+            id: 'cricket_ground',
+            name: 'Main Cricket & Football Ground',
+            aliases: ['Cricket Ground', 'Football Ground', 'Main Field', 'Stadium'],
+            category: 'sports',
+            lat: 30.35585,
+            lng: 76.36745,
+            nearestNode: 'N_ground',
+            description: 'Full-size cricket oval and football pitch hosting inter-university tournaments.',
+            hours: '6:00 AM – 8:00 PM',
+            floors: 1
+        },
+        {
+            id: 'health_centre',
+            name: 'TIET Health Centre (Dispensary)',
+            aliases: ['Health Centre', 'Dispensary', 'Hospital', 'Clinic', 'Medical'],
+            category: 'medical',
+            lat: 30.35265,
+            lng: 76.37025,
+            nearestNode: 'N_health',
+            description: '24/7 campus medical clinic, ambulance service, and pharmacy.',
+            hours: '24 Hours',
+            floors: 1
+        },
 
-      // Index sublocations / departments
-      if (Array.isArray(loc.sublocations)) {
-        loc.sublocations.forEach(sub => {
-          if (sub.name) {
-            const normSub = sub.name.toLowerCase().trim();
-            if (!aliasIndex.has(normSub)) {
-              aliasIndex.set(normSub, loc.id);
-            }
-          }
-          if (sub.code) {
-            const normCode = sub.code.toLowerCase().trim();
-            if (!aliasIndex.has(normCode)) {
-              aliasIndex.set(normCode, loc.id);
-            }
-          }
-        });
-      }
-    });
-
-    console.log('[CampusRoutes] Loaded ' + locationMap.size + ' canonical verified locations with ' + aliasIndex.size + ' searchable keys.');
-  }
-
-  // Pre-index the canonical dataset immediately
-  indexLocations(EMBEDDED_LOCATIONS);
-
-  // Exported Location Service API
-  window.CampusLocations = {
-    /**
-     * Optional async re-loader from data/locations.json (useful for live reload)
-     */
-    init: async function() {
-      if (locationMap.size > 0) {
-        return this.getAll();
-      }
-      try {
-        const resp = await fetch('data/locations.json');
-        if (resp.ok) {
-          const data = await resp.json();
-          indexLocations(data);
+        // --- Gates ---
+        {
+            id: 'gate_1',
+            name: 'Main Gate (Gate 1)',
+            aliases: ['Gate 1', 'Main Gate', 'Bhadson Road Gate'],
+            category: 'gate',
+            lat: 30.35190,
+            lng: 76.37360,
+            nearestNode: 'N_gate1',
+            description: 'Primary campus entrance on Bhadson Road with visitor security reception.',
+            hours: '24 Hours',
+            floors: 1
+        },
+        {
+            id: 'gate_2',
+            name: 'Gate 2 (Hostel & Poly Gate)',
+            aliases: ['Gate 2', 'Poly Gate', 'Hostel Gate'],
+            category: 'gate',
+            lat: 30.35175,
+            lng: 76.36880,
+            nearestNode: 'N_gate2',
+            description: 'Southern campus gate providing direct access to Hostels A, B, and C.',
+            hours: '6:00 AM – 10:30 PM',
+            floors: 1
+        },
+        {
+            id: 'gate_3',
+            name: 'Gate 3 (LMTSM & Western Gate)',
+            aliases: ['Gate 3', 'Western Gate', 'LMTSM Gate'],
+            category: 'gate',
+            lat: 30.35560,
+            lng: 76.36120,
+            nearestNode: 'N_gate3',
+            description: 'Western campus entry serving LMTSM, Hostel M, and Hostel N.',
+            hours: '6:00 AM – 10:00 PM',
+            floors: 1
         }
-      } catch (e) {
-        console.warn('[CampusRoutes] Using embedded location dataset:', e);
-      }
-      return this.getAll();
-    },
+    ];
 
-    getAll: function() {
-      return Array.from(locationMap.values());
-    },
-
-    getById: function(id) {
-      return locationMap.get(id) || null;
-    },
-
-    resolveCanonical: function(query) {
-      if (!query) return null;
-      const normalized = query.toLowerCase().trim();
-      const id = aliasIndex.get(normalized);
-      if (id) return locationMap.get(id);
-      return null;
-    },
-
-    getByCategory: function(category) {
-      if (!category || category === 'All') return this.getAll();
-      return this.getAll().filter(loc => loc.category === category);
-    },
-
-    getQuickNav: function() {
-      return this.getAll().filter(loc => loc.quickNav);
-    },
-
-    getCategories: function() {
-      return [
-        'All',
-        'Academic Blocks',
-        'Hostels',
-        'Libraries',
-        'Food Courts and Cafes',
-        'Sports Facilities',
-        'Administrative Buildings',
-        'Other Campus Facilities'
-      ];
-    },
-
-    calculateDistance: function(coord1, coord2) {
-      if (!coord1 || !coord2) return 0;
-      const lat1 = coord1[0], lon1 = coord1[1];
-      const lat2 = coord2[0], lon2 = coord2[1];
-      const R = 6371000;
-      const phi1 = (lat1 * Math.PI) / 180;
-      const phi2 = (lat2 * Math.PI) / 180;
-      const deltaPhi = ((lat2 - lat1) * Math.PI) / 180;
-      const deltaLambda = ((lon2 - lon1) * Math.PI) / 180;
-      const a = Math.sin(deltaPhi / 2) * Math.sin(deltaPhi / 2) +
-                Math.cos(phi1) * Math.cos(phi2) *
-                Math.sin(deltaLambda / 2) * Math.sin(deltaLambda / 2);
-      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-      return Math.round(R * c);
-    },
-
-    getNearbyLocations: function(locationId, limit = 4) {
-      const current = this.getById(locationId);
-      if (!current) return [];
-      
-      const allOthers = this.getAll().filter(loc => loc.id !== locationId);
-      allOthers.sort((a, b) => {
-        const distA = this.calculateDistance(current.coordinates, a.coordinates);
-        const distB = this.calculateDistance(current.coordinates, b.coordinates);
-        return distA - distB;
-      });
-
-      return allOthers.slice(0, limit).map(loc => ({
-        ...loc,
-        distanceMeters: this.calculateDistance(current.coordinates, loc.coordinates)
-      }));
+    function validateLocation(loc) {
+        if (!loc || typeof loc !== 'object') return false;
+        if (typeof loc.id !== 'string' || !loc.id.trim()) return false;
+        if (typeof loc.name !== 'string' || !loc.name.trim()) return false;
+        if (!VALID_CATEGORIES.has(loc.category)) return false;
+        if (typeof loc.lat !== 'number' || Number.isNaN(loc.lat)) return false;
+        if (typeof loc.lng !== 'number' || Number.isNaN(loc.lng)) return false;
+        if (loc.lat < TIET_BOUNDS.minLat || loc.lat > TIET_BOUNDS.maxLat) return false;
+        if (loc.lng < TIET_BOUNDS.minLng || loc.lng > TIET_BOUNDS.maxLng) return false;
+        return true;
     }
-  };
-})(window);
+
+    function buildCanonicalLocations(rawList) {
+        const seenIds = new Set();
+        const seenNames = new Set();
+        const validated = [];
+        const issues = [];
+
+        rawList.forEach((raw) => {
+            if (!validateLocation(raw)) {
+                issues.push(`Invalid location skipped: ${raw && raw.id ? raw.id : 'unknown'}`);
+                return;
+            }
+            const normId = raw.id.trim();
+            const normName = raw.name.trim().toLowerCase();
+
+            if (seenIds.has(normId)) {
+                issues.push(`Duplicate ID skipped: ${normId}`);
+                return;
+            }
+            if (seenNames.has(normName)) {
+                issues.push(`Duplicate name skipped: ${raw.name}`);
+                return;
+            }
+
+            seenIds.add(normId);
+            seenNames.add(normName);
+
+            validated.push(Object.freeze({
+                id: normId,
+                name: raw.name.trim(),
+                aliases: Array.isArray(raw.aliases) ? [...raw.aliases] : [],
+                category: raw.category,
+                lat: Number(raw.lat.toFixed(6)),
+                lng: Number(raw.lng.toFixed(6)),
+                nearestNode: raw.nearestNode || null,
+                description: raw.description || '',
+                hours: raw.hours || 'Check campus notice',
+                floors: Number.isFinite(raw.floors) ? raw.floors : 1
+            }));
+        });
+
+        if (issues.length > 0 && typeof console !== 'undefined') {
+            console.warn('[CampusLocations] Validation warnings:', issues);
+        }
+
+        return validated;
+    }
+
+    const CANONICAL_LOCATIONS = buildCanonicalLocations(RAW_LOCATIONS);
+    const LOCATION_BY_ID = new Map(CANONICAL_LOCATIONS.map((loc) => [loc.id, loc]));
+
+    const CampusLocations = {
+        BOUNDS: TIET_BOUNDS,
+        CATEGORIES: Array.from(VALID_CATEGORIES),
+
+        getAll() {
+            return CANONICAL_LOCATIONS;
+        },
+
+        getById(id) {
+            if (!id) return null;
+            return LOCATION_BY_ID.get(String(id).trim()) || null;
+        },
+
+        getByCategory(category) {
+            if (!category || category === 'all') return CANONICAL_LOCATIONS;
+            return CANONICAL_LOCATIONS.filter((loc) => loc.category === category);
+        },
+
+        validateRecord: validateLocation,
+
+        validateAll() {
+            const ids = new Set();
+            const errors = [];
+            for (const loc of CANONICAL_LOCATIONS) {
+                if (!validateLocation(loc)) {
+                    errors.push(`Invalid record: ${loc.id}`);
+                }
+                if (ids.has(loc.id)) {
+                    errors.push(`Duplicate ID: ${loc.id}`);
+                }
+                ids.add(loc.id);
+            }
+            return {
+                valid: errors.length === 0,
+                count: CANONICAL_LOCATIONS.length,
+                errors
+            };
+        }
+    };
+
+    global.CampusLocations = CampusLocations;
+    if (typeof module !== 'undefined' && module.exports) {
+        module.exports = CampusLocations;
+    }
+})(typeof window !== 'undefined' ? window : globalThis);

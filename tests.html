@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>CampusRoutes – Automated Verification Suite</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
+    <style>
+        body { font-family: system-ui, sans-serif; max-width: 860px; margin: 2rem auto; padding: 0 1rem; }
+        .pass { color: #15803d; }
+        .fail { color: #b91c1c; font-weight: 700; }
+        #test-map { width: 300px; height: 200px; visibility: hidden; position: absolute; }
+        li { margin: 0.35rem 0; }
+    </style>
+</head>
+<body>
+    <h1>CampusRoutes Automated Test Suite</h1>
+    <p id="test-summary">Running tests...</p>
+    <ul id="test-results"></ul>
+    <div id="test-map"></div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+    <script src="js/locations.js"></script>
+    <script src="js/graph.js"></script>
+    <script src="js/search.js"></script>
+    <script src="js/routing.js"></script>
+    <script src="js/map.js"></script>
+    <script src="js/tests.js"></script>
+</body>
+</html>

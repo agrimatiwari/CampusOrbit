@@ -1,325 +1,149 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>CampusRoutes – Smart Campus Navigation Platform | Thapar Institute (TIET), Patiala</title>
-  <meta name="description" content="CampusRoutes: The modern, interactive campus navigation platform for Thapar Institute of Engineering & Technology (TIET), Patiala. Explore academic blocks, hostels, libraries, dining hubs, and facilities.">
-
-  <!-- Google Font: Inter -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-
-  <!-- Leaflet CSS -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
-
-  <!-- Application Stylesheets -->
-  <link rel="stylesheet" href="css/style.css">
-  <link rel="stylesheet" href="css/map.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="CampusRoutes – Smart Pedestrian Navigation Platform for Thapar Institute of Engineering & Technology (TIET), Patiala.">
+    <title>CampusRoutes – Smart Campus Navigation | TIET Patiala</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
+    <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
-
-  <div class="app-container">
-    <!-- Top Application Bar -->
     <header class="app-header">
-      <div class="brand-section">
-        <button class="mobile-menu-btn" id="mobile-drawer-toggle" aria-label="Toggle Navigation Drawer">☰</button>
-        <div class="brand-logo-icon">CR</div>
-        <div class="brand-info">
-          <div class="brand-name">
-            CampusRoutes
-            <span class="brand-badge">TIET Patiala</span>
-          </div>
-          <span class="brand-tagline">Your Campus, Within Reach</span>
+        <div class="brand">
+            <span class="brand-badge" aria-hidden="true">CR</span>
+            <div>
+                <h1 class="brand-title">CampusRoutes</h1>
+                <p class="brand-subtitle">TIET Patiala Pedestrian Navigation</p>
+            </div>
         </div>
-      </div>
-
-      <div class="header-actions">
-        <button class="btn-header" id="reset-map-view-btn" title="Reset map to full campus view">
-          <span>🎯</span> <span>Center Campus</span>
-        </button>
-        <button class="btn-header primary" id="open-official-map-btn" title="View Official 2D Schematic Campus Map">
-          <span>🗺️</span> <span>Official 2D Map</span>
-        </button>
-      </div>
+        <div class="header-actions">
+            <button type="button" id="reset-map-view-btn" class="btn btn-secondary" aria-label="Center map on TIET campus">
+                Center Campus
+            </button>
+            <button type="button" id="theme-toggle-btn" class="btn btn-secondary" aria-label="Toggle dark or light theme">
+                Theme
+            </button>
+        </div>
     </header>
 
-    <!-- Main Application Body -->
-    <div class="app-body">
-      <!-- Left Sidebar Navigation & Tools -->
-      <aside class="app-sidebar" id="app-sidebar">
-        <!-- Search & Welcome Header -->
-        <div class="sidebar-search-section">
-          <div class="welcome-subhead">Thapar Institute of Engineering & Technology</div>
-          <h1 class="welcome-title">Your Campus, Within Reach</h1>
+    <div class="app-layout">
+        <aside class="sidebar" aria-label="Campus search and route planner">
+            <div id="status-banner" class="status-banner" role="status" aria-live="polite" hidden></div>
 
-          <div class="search-container">
-            <div class="search-input-wrapper">
-              <span class="search-icon">🔍</span>
-              <input 
-                type="text" 
-                id="campus-search-input" 
-                class="search-input" 
-                placeholder="Search buildings, hostels, departments, CSED..."
-                autocomplete="off"
-                spellcheck="false"
-              >
-              <button class="clear-search-btn" id="clear-search-btn" title="Clear search">&times;</button>
-            </div>
-
-            <!-- Autocomplete Suggestions Dropdown -->
-            <div class="search-results-dropdown" id="search-results-dropdown"></div>
-          </div>
-        </div>
-
-        <!-- Sidebar Navigation Tabs -->
-        <nav class="sidebar-tabs-bar">
-          <button class="nav-tab-btn active" data-tab="explore">
-            <span>📍</span> <span>Explore</span>
-          </button>
-          <button class="nav-tab-btn" data-tab="routes">
-            <span>🧭</span> <span>Route Planner</span>
-          </button>
-          <button class="nav-tab-btn" data-tab="saved">
-            <span>⭐</span> <span>Saved</span>
-          </button>
-          <button class="nav-tab-btn" data-tab="info">
-            <span>ℹ️</span> <span>Guide</span>
-          </button>
-        </nav>
-
-        <!-- Sidebar Content Area -->
-        <div class="sidebar-content-area">
-          <!-- 1. EXPLORE TAB -->
-          <div class="tab-content-panel active" id="tab-panel-explore">
-            <!-- Quick Navigation Shortcuts -->
-            <div class="quick-nav-wrapper">
-              <div class="section-label">Quick Destinations</div>
-              <div class="quick-nav-scroll" id="quick-nav-container">
-                <!-- Rendered dynamically -->
-              </div>
-            </div>
-
-            <!-- Category Filter Bar (7 Standard Categories) -->
-            <div class="section-label">Categories</div>
-            <div class="category-filter-bar">
-              <button class="category-filter-btn active" data-category="All">All Places</button>
-              <button class="category-filter-btn" data-category="Academic Blocks">Academic Blocks</button>
-              <button class="category-filter-btn" data-category="Hostels">Hostels</button>
-              <button class="category-filter-btn" data-category="Libraries">Libraries</button>
-              <button class="category-filter-btn" data-category="Food Courts and Cafes">Food & Cafes</button>
-              <button class="category-filter-btn" data-category="Sports Facilities">Sports Facilities</button>
-              <button class="category-filter-btn" data-category="Administrative Buildings">Admin Buildings</button>
-              <button class="category-filter-btn" data-category="Other Campus Facilities">Other Facilities</button>
-            </div>
-
-            <!-- Canonical Location Cards List -->
-            <div class="locations-list-container" id="locations-card-list">
-              <!-- Rendered via JavaScript -->
-            </div>
-          </div>
-
-          <!-- 2. ROUTE PLANNER TAB (With Alternative Routes) -->
-          <div class="tab-content-panel" id="tab-panel-routes">
-            <div class="route-planner-card">
-              <div class="route-input-group">
-                <div class="route-field">
-                  <label class="route-label" for="route-start-select">
-                    <span>🟢</span> Starting Point:
-                  </label>
-                  <select id="route-start-select" class="route-select"></select>
+            <!-- Location Discovery -->
+            <section class="panel-section" aria-labelledby="explore-heading">
+                <h2 id="explore-heading" class="section-title">Find Campus Location</h2>
+                <div class="search-box-wrapper">
+                    <label for="explore-search-input" class="visually-hidden">Search buildings, hostels, or landmarks</label>
+                    <input
+                        type="search"
+                        id="explore-search-input"
+                        class="text-input"
+                        placeholder="Search C Block, COS, Hostel J, Library..."
+                        autocomplete="off"
+                        aria-autocomplete="list"
+                        aria-controls="explore-search-results"
+                    >
+                    <div id="explore-search-results" class="search-dropdown" role="listbox" aria-label="Matching campus locations" hidden></div>
                 </div>
 
-                <div class="route-swap-row">
-                  <button class="route-swap-btn" id="route-swap-btn" title="Swap Start & Destination">⇅</button>
+                <div id="category-filter-bar" class="category-chips" role="group" aria-label="Filter locations by category">
+                    <button type="button" class="chip is-active" data-category="all" aria-pressed="true">All</button>
+                    <button type="button" class="chip" data-category="academic" aria-pressed="false">Academic</button>
+                    <button type="button" class="chip" data-category="hostel" aria-pressed="false">Hostels</button>
+                    <button type="button" class="chip" data-category="dining" aria-pressed="false">Dining</button>
+                    <button type="button" class="chip" data-category="sports" aria-pressed="false">Sports</button>
+                    <button type="button" class="chip" data-category="admin" aria-pressed="false">Admin</button>
+                    <button type="button" class="chip" data-category="medical" aria-pressed="false">Medical</button>
+                    <button type="button" class="chip" data-category="gate" aria-pressed="false">Gates</button>
+                </div>
+            </section>
+
+            <!-- Pedestrian Route Planner -->
+            <section class="panel-section" aria-labelledby="routing-heading">
+                <div class="section-header-row">
+                    <h2 id="routing-heading" class="section-title">Pedestrian Directions</h2>
+                    <div class="route-controls-inline">
+                        <button type="button" id="swap-locations-btn" class="btn-icon" title="Swap start and destination" aria-label="Swap starting point and destination">
+                            ⇅
+                        </button>
+                        <button type="button" id="clear-route-btn" class="btn-link" aria-label="Clear active route">
+                            Clear
+                        </button>
+                    </div>
                 </div>
 
-                <div class="route-field">
-                  <label class="route-label" for="route-dest-select">
-                    <span>🏁</span> Destination:
-                  </label>
-                  <select id="route-dest-select" class="route-select"></select>
+                <div class="search-box-wrapper">
+                    <label for="origin-input" class="input-label">From (Start)</label>
+                    <input
+                        type="search"
+                        id="origin-input"
+                        class="text-input"
+                        placeholder="Choose starting building or gate..."
+                        autocomplete="off"
+                    >
+                    <div id="origin-search-results" class="search-dropdown" role="listbox" aria-label="Starting location options" hidden></div>
                 </div>
-              </div>
 
-              <div class="route-actions-row">
-                <button class="btn-route-calc" id="route-calc-btn">Get Walking Directions</button>
-                <button class="btn-route-clear" id="route-clear-btn">Clear</button>
-              </div>
-            </div>
+                <div class="search-box-wrapper">
+                    <label for="destination-input" class="input-label">To (Destination)</label>
+                    <input
+                        type="search"
+                        id="destination-input"
+                        class="text-input"
+                        placeholder="Choose destination..."
+                        autocomplete="off"
+                    >
+                    <div id="destination-search-results" class="search-dropdown" role="listbox" aria-label="Destination location options" hidden></div>
+                </div>
 
-            <!-- Route Presets -->
-            <div class="route-presets-section">
-              <div class="section-label">Popular Campus Routes</div>
-              <div class="route-presets-grid">
-                <button class="route-preset-chip" data-start="main-gate" data-dest="nava-nalanda-library">
-                  🚶 Main Gate 1 &rarr; Nava Nalanda Library
-                </button>
-                <button class="route-preset-chip" data-start="hostel-a-agira" data-dest="lt-building">
-                  🚶 Hostel A (Agira) &rarr; Lecture Hall Complex (LP/LT)
-                </button>
-                <button class="route-preset-chip" data-start="hostel-n-ananta" data-dest="cos-complex">
-                  🚶 Hostel N (Iconic) &rarr; COS Central Food Court
-                </button>
-                <button class="route-preset-chip" data-start="c-block" data-dest="auditorium">
-                  🚶 C-Block (CSED) &rarr; University Auditorium
-                </button>
-                <button class="route-preset-chip" data-start="hostel-m-anantam" data-dest="athletic-track">
-                  🚶 Hostel M Towers &rarr; Athletic Running Track
-                </button>
-              </div>
-            </div>
+                <div id="route-summary" class="route-summary" hidden>
+                    <div class="route-metrics">
+                        <strong id="route-distance">0 m</strong>
+                        <span aria-hidden="true">•</span>
+                        <span id="route-duration">0 min walk</span>
+                    </div>
+                    <button type="button" id="toggle-alt-route-btn" class="btn btn-secondary btn-sm" hidden>
+                        Show Alternative Path
+                    </button>
+                </div>
 
-            <!-- Calculated Route Summary (Direct vs Alternative Routes) -->
-            <div class="route-summary-card" id="route-summary-card" style="display: none;"></div>
-          </div>
+                <ol id="route-steps-list" class="route-steps-list" aria-label="Turn-by-turn walking instructions"></ol>
+            </section>
+        </aside>
 
-          <!-- 3. SAVED TAB (Favourites & Recent Visits) -->
-          <div class="tab-content-panel" id="tab-panel-saved">
-            <div class="saved-section-block">
-              <div class="section-label">⭐ Saved Locations</div>
-              <div class="saved-items-list" id="saved-favourites-list"></div>
-            </div>
+        <main class="map-workspace">
+            <div id="campus-map" role="region" aria-label="Interactive TIET campus pedestrian map"></div>
 
-            <div class="saved-section-block">
-              <div class="section-label">🕒 Recently Visited</div>
-              <div class="saved-items-list" id="saved-recents-list"></div>
-            </div>
-          </div>
-
-          <!-- 4. GUIDE & INFO TAB -->
-          <div class="tab-content-panel" id="tab-panel-info">
-            <div class="campus-info-card">
-              <div class="info-card-title">🚑 Emergency & Medical Contacts</div>
-              <div class="info-contact-row">
-                <span class="info-contact-name">TIET Health Centre & Dispensary</span>
-                <span class="info-contact-val">+91-175-2393100</span>
-              </div>
-              <div class="info-contact-row">
-                <span class="info-contact-name">Campus Ambulance (24/7)</span>
-                <span class="info-contact-val">+91-98156-23100</span>
-              </div>
-              <div class="info-contact-row">
-                <span class="info-contact-name">Main Security Gate 1</span>
-                <span class="info-contact-val">+91-175-2393111</span>
-              </div>
-              <div class="info-contact-row">
-                <span class="info-contact-name">Directorate & Admin Office</span>
-                <span class="info-contact-val">+91-175-2393021</span>
-              </div>
-            </div>
-
-            <div class="campus-info-card">
-              <div class="info-card-title">🚪 Campus Gates & Access</div>
-              <div class="info-contact-row">
-                <span class="info-contact-name">Gate 1 (Main Gate - Bhadson Rd)</span>
-                <span class="info-contact-val">Open 24/7</span>
-              </div>
-              <div class="info-contact-row">
-                <span class="info-contact-name">Gate 2 (Faculty/Staff Gate)</span>
-                <span class="info-contact-val">06:00 AM - 10:00 PM</span>
-              </div>
-              <div class="info-contact-row">
-                <span class="info-contact-name">Back Gate 3 (Adarsh Nagar Side)</span>
-                <span class="info-contact-val">06:00 AM - 10:00 PM</span>
-              </div>
-            </div>
-
-            <div class="campus-info-card">
-              <div class="info-card-title">🛺 Campus E-Rickshaw Service</div>
-              <p style="font-size: 12px; color: var(--text-muted); line-height: 1.5; margin-bottom: 8px;">
-                Environment-friendly electric rickshaws operate continuously connecting Gate 1, all hostel clusters, academic quads, COS food court, and the Central Library.
-              </p>
-              <div class="info-contact-row">
-                <span class="info-contact-name">Standard Flat Fare</span>
-                <span class="info-contact-val">&#8377;10 - &#8377;20 per ride</span>
-              </div>
-              <div class="info-contact-row">
-                <span class="info-contact-name">Operating Hours</span>
-                <span class="info-contact-val">07:00 AM - 10:30 PM</span>
-              </div>
-            </div>
-
-            <div class="campus-info-card">
-              <div class="info-card-title">💡 Visitor Guidelines</div>
-              <ul style="font-size: 12px; color: var(--text-muted); line-height: 1.6; padding-left: 18px;">
-                <li>Visitor parking is available inside Gate 1 near the Directorate and SBOP Lawns.</li>
-                <li>Hostel entries are restricted to residents with biometric student ID cards.</li>
-                <li>Speed limit on all campus avenues is strictly 20 km/h.</li>
-              </ul>
-            </div>
-          </div>
-        </div>
-      </aside>
-
-      <!-- Center Interactive Campus Map -->
-      <main class="app-main" style="flex: 1; position: relative;">
-        <div id="campus-map-container"></div>
-
-        <!-- Floating Map Controls -->
-        <div class="map-floating-controls">
-          <button class="map-ctrl-btn" onclick="window.CampusMap.resetView()" title="Fit entire campus">
-            <span>🎯 Fit Campus</span>
-          </button>
-          <button class="map-ctrl-btn" onclick="document.getElementById('official-map-modal').classList.add('open')" title="Open Official 2D Map Reference">
-            <span>🗺️ Schematic Map</span>
-          </button>
-        </div>
-
-        <!-- Map Category Legend (7 Categories) -->
-        <div class="map-legend-panel">
-          <div class="legend-title">Campus Legend</div>
-          <div class="legend-items">
-            <div class="legend-item"><span class="legend-color-dot academic"></span> Academic Blocks</div>
-            <div class="legend-item"><span class="legend-color-dot hostels"></span> Student Hostels</div>
-            <div class="legend-item"><span class="legend-color-dot libraries"></span> Central Library</div>
-            <div class="legend-item"><span class="legend-color-dot food"></span> Food Courts & Cafes</div>
-            <div class="legend-item"><span class="legend-color-dot sports"></span> Sports Facilities</div>
-            <div class="legend-item"><span class="legend-color-dot admin"></span> Admin Buildings</div>
-            <div class="legend-item"><span class="legend-color-dot facilities"></span> Other Facilities</div>
-          </div>
-        </div>
-
-        <!-- Right Side Location Details Panel -->
-        <div class="location-details-panel" id="location-details-panel">
-          <!-- Rendered dynamically by CampusApp.renderLocationDetailsPanel -->
-        </div>
-      </main>
+            <!-- Selected Location Info Card -->
+            <article id="location-detail-card" class="location-card" aria-live="polite" hidden>
+                <div class="location-card-header">
+                    <div>
+                        <span class="location-badge" data-field="category"></span>
+                        <h3 class="location-card-title" data-field="name"></h3>
+                    </div>
+                    <button type="button" class="btn-icon" data-action="close-card" aria-label="Close location details">✕</button>
+                </div>
+                <p class="location-card-desc" data-field="description"></p>
+                <p class="location-card-hours" data-field="hours"></p>
+                <div class="location-card-actions">
+                    <button type="button" class="btn btn-primary btn-sm" data-action="set-origin">Start Here</button>
+                    <button type="button" class="btn btn-primary btn-sm" data-action="set-destination">Navigate Here</button>
+                    <button type="button" class="btn btn-secondary btn-sm" data-action="toggle-favorite" aria-pressed="false">☆ Save</button>
+                </div>
+            </article>
+        </main>
     </div>
-  </div>
 
-  <!-- Official 2D Schematic Campus Map Modal -->
-  <div class="official-map-modal" id="official-map-modal">
-    <div class="modal-content-container">
-      <div class="modal-header">
-        <div class="modal-title">Official TIET Patiala Schematic Campus Map Reference</div>
-        <button class="modal-close-btn" id="close-modal-btn" aria-label="Close modal">&times;</button>
-      </div>
-      <div class="modal-body">
-        <p style="font-size: 13px; color: #475569; margin-bottom: 12px; text-align: center;">
-          High-definition university map reference for Thapar Institute of Engineering & Technology, Patiala.
-        </p>
-        <img src="assets/campus-map.png" alt="Official TIET Patiala Campus Map" class="official-map-img">
-      </div>
-      <div class="modal-footer">
-        <span>Source: TIET Official Campus Map Guidelines</span>
-        <span>CampusRoutes &bull; Thapar Institute of Engineering & Technology, Patiala</span>
-      </div>
-    </div>
-  </div>
-
-  <!-- Leaflet.js Library -->
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-
-  <!-- Application Logic Modules (Pure Vanilla JavaScript) -->
-  <script src="js/locations.js"></script>
-  <script src="js/graph-data.js"></script>
-  <script src="js/campus-footprints.js"></script>
-  <script src="js/storage.js"></script>
-  <script src="js/search.js"></script>
-  <script src="js/routing.js"></script>
-  <script src="js/map.js"></script>
-  <script src="js/app.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+    <script src="js/locations.js"></script>
+    <script src="js/graph.js"></script>
+    <script src="js/storage.js"></script>
+    <script src="js/search.js"></script>
+    <script src="js/routing.js"></script>
+    <script src="js/map.js"></script>
+    <script src="js/app.js"></script>
 </body>
 </html>

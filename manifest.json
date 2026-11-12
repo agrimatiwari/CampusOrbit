@@ -1,0 +1,10 @@
+{
+  "name": "CampusRoutes – Smart Campus Navigation | TIET Patiala",
+  "short_name": "CampusRoutes",
+  "description": "Smart Pedestrian Navigation Platform for Thapar Institute of Engineering & Technology (TIET), Patiala.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#1d4ed8",
+  "icons": []
+}
