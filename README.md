@@ -1,6 +1,6 @@
 # CampusRoutes – Smart Campus Navigation Platform (TIET Patiala)
 
-Interactive pedestrian navigation and campus discovery web application for **Thapar Institute of Engineering & Technology (TIET), Patiala**, built with HTML5, CSS3, Vanilla JavaScript, and Leaflet.js.
+Interactive pedestrian navigation and campus discovery web application for , built with HTML5, CSS3, JavaScript, and Leaflet.js.
 
 ## Project Structure
 
